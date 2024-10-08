@@ -1,5 +1,6 @@
 ﻿Imports System.Data
 Imports System.IO
+Imports System.Data.SqlClient
 Public Class RunCommand
     Inherits AsyncCommandBase
 
@@ -12,14 +13,23 @@ Public Class RunCommand
     Private _vehicles As String
     Private _customerscsv As String
     Private _mainWindowViewModel As MainWindowViewModel
+    Private _dataWorld As String
 
 
     Dim tagsCustomers As New Dictionary(Of String, String)
 
+    Dim tagsParts As New Dictionary(Of String, String)
 
+    Dim _connectionString = "Data Source=localhost;Initial Catalog=DataWorldBlank;ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
+
+    Private Sub ConnectionStringUpdater(dw As String)
+        _connectionString = "Data Source=localhost;Initial Catalog=" & dw & ";ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
+
+    End Sub
 
     Public Sub New(mainWindowViewModel As MainWindowViewModel)
         _mainWindowViewModel = mainWindowViewModel
+
         tagsCustomers.Add("NAD|| ", "CustomerNumber")
         tagsCustomers.Add("NAME|| ", "LastName")
         tagsCustomers.Add("ADDR1|| ", "Address")
@@ -35,9 +45,52 @@ Public Class RunCommand
         tagsCustomers.Add("CREDIT|| ", "Memo")
         tagsCustomers.Add("CREDLIM||", "CreditLimit")
 
+        tagsParts.Add("PART|| ", "PartsNumber")
+        tagsParts.Add("DESC|| ", "PartDescription")
+        tagsParts.Add("BIN|| ", "Bin1")
+        tagsParts.Add("LIST|| ", "ListPrice")
+        tagsParts.Add("DLRNET|| ", "CostPrice")
+        tagsParts.Add("EXCHANGE|| ", "TradePrice")
+        tagsParts.Add("ONHAND|| ", "QuantityOnHand")
+        tagsParts.Add("LASTCHGDATE|| ", "LastTransactionDate")
+        tagsParts.Add("DATELASTSAL|| ", "LastPurchaseDate")
+        tagsParts.Add("STATUS|| ", "Status")
+        tagsParts.Add("ALTPART|| ", "AlternatePart")
+        tagsParts.Add("VEND|| ", "Manufacturer")
+        tagsParts.Add("SOURCE|| ", "Source")
+        tagsParts.Add("GROUP|| ", "PGroup")
+        tagsParts.Add("MAX|| ", "MaxQuantity")
+        tagsParts.Add("MIN|| ", "MinQuantity")
+        tagsParts.Add("PREVYRSALES|| ", "Comments")
 
 
 
+
+    End Sub
+
+    Private Sub LoadData(dt As DataTable, connect_string As String, tableName As String, mapping As Dictionary(Of String, String))
+
+        Using sourceConnection = New SqlConnection(connect_string)
+            Try
+                sourceConnection.Open()
+            Catch ex As Exception
+
+            End Try
+
+            Using bulkCopy As System.Data.SqlClient.SqlBulkCopy = New SqlBulkCopy(sourceConnection)
+                bulkCopy.DestinationTableName = "dbo." & tableName
+                For Each map In mapping
+                    bulkCopy.ColumnMappings.Add(map.Value, map.Value)
+                Next
+                Try
+                    bulkCopy.WriteToServer(dt)
+                Catch ex As Exception
+
+                End Try
+
+
+            End Using
+        End Using
     End Sub
 
     Private Function DFWriter(map As Dictionary(Of String, String), filePathCleaned As String)
@@ -136,13 +189,17 @@ Public Class RunCommand
         _vehicleinventory = _mainWindowViewModel.VehicleInventory
         _vehicles = _mainWindowViewModel.Vehicles
         _customerscsv = _mainWindowViewModel.CustomersCSV
-        '_dataWorld = _mainWindowViewModel.DataWorld
+        _dataWorld = _mainWindowViewModel.DataWorld
+        ConnectionStringUpdater(_dataWorld)
 
 
 
         Dim CustomerCleaned As String = FileCleaner(_customers)
         Dim dt As DataTable = DFWriter(tagsCustomers, CustomerCleaned)
-        Console.WriteLine("Done!")
+        LoadData(dt, _connectionString, "Customers", tagsCustomers)
+        Console.WriteLine("done!")
+
+
 
 
     End Function
