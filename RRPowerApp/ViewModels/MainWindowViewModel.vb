@@ -10,6 +10,7 @@
     Private _vehicles As String = ""
     Private _customerscsv As String = ""
     Private _dataworld As String = ""
+    Private _status As String = ""
     Private Enum DataFile
         Customers
         PartsInventory
@@ -129,6 +130,18 @@
             If _dataworld <> value Then
                 _dataworld = value
                 OnPropertyChanged(NameOf(DataWorld))
+            End If
+        End Set
+    End Property
+
+    Public Property Status() As String
+        Get
+            Return _status
+        End Get
+        Set(ByVal value As String)
+            If _status <> value Then
+                _status = value
+                OnPropertyChanged(NameOf(Status))
             End If
         End Set
     End Property

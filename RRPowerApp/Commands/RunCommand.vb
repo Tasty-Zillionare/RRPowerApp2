@@ -16,9 +16,132 @@ Public Class RunCommand
     Private _dataWorld As String
 
 
-    Dim tagsCustomers As New Dictionary(Of String, String)
+    Dim tagsCustomers As New Dictionary(Of String, String) From
+           {{"NAD|| ", "CustomerNumber"} _
+        , {"NAME|| ", "LastName"} _
+        , {"ADDR1|| ", "Address"} _
+        , {"CITY|| ", "City"} _
+        , {"STATE|| ", "ProvinceState"} _
+        , {"ZIP||", "PostalZip"} _
+        , {"PHONE|| ", "HomePhone"} _
+        , {"PO|| ", "Comments"} _
+        , {"INTERNETADD||", "EmailAddress"} _
+        , {"CELLPHONE|| ", "CellPhone"} _
+        , {"BUSPHONE|| ", "BusinessPhone"} _
+        , {"AUTHVENDOR|| ", "CriticalMemo"} _
+        , {"CREDIT|| ", "Memo"} _
+        , {"CREDLIM||", "CreditLimit"}}
 
-    Dim tagsParts As New Dictionary(Of String, String)
+
+
+    Dim tagsPartsInventory As New Dictionary(Of String, String) From
+         {{"PART|| ", "PartsNumber"} _
+        , {"DESC|| ", "PartDescription"} _
+        , {"BIN|| ", "Bin1"} _
+        , {"LIST|| ", "ListPrice"} _
+        , {"DLRNET|| ", "CostPrice"} _
+        , {"EXCHANGE|| ", "TradePrice"} _
+        , {"ONHAND|| ", "QuantityOnHand"} _
+        , {"LASTCHGDATE|| ", "LastTransactionDate"} _
+        , {"DATELASTSAL|| ", "LastPurchaseDate"} _
+        , {"STATUS|| ", "Status"} _
+        , {"ALTPART|| ", "AlternatePart"} _
+        , {"VEND|| ", "Manufacturer"} _
+        , {"SOURCE|| ", "Source"} _
+        , {"GROUP|| ", "PGroup"} _
+        , {"MAX|| ", "MaxQuantity"} _
+        , {"MIN|| ", "MinQuantity"} _
+        , {"PREVYRSALES|| ", "Comments"}}
+
+    Dim tagsSOPartHist As New Dictionary(Of String, String) From
+           {{"Part", "PartNumber"} _
+        , {"Description", "PartDescription"} _
+        , {"Qty", "QuantitySold"} _
+        , {"Cost", "CostPrice"} _
+        , {"List", "ListPrice"} _
+        , {"Sell", "SalesPrice"} _
+        , {"RO#", "SONumber"} _
+        , {"Line", "RequestLine"} _
+        , {"Slsp", "CSR"} _
+        , {"Pay Type", "PayType"}}
+
+    Dim tagsPartsInvoice As New Dictionary(Of String, String) From
+                {{"NAD#", "CustomerNumber"} _
+                , {"Name", "CustomerLastName"} _
+                , {"Part", "PartNumber"} _
+                , {"Description", "PartDescription"} _
+                , {"Qty", "QuantitySold"} _
+                , {"Cost", "CostPrice"} _
+                , {"List", "ListPrice"} _
+                , {"Invoice#", "InvoiceNumber"} _
+                , {"Slsp", "CSR"} _
+                , {"Pay Type", "PayType"} _
+                , {"Invoiced Date", "DateOpened"}}
+
+    Dim tagsSOHeaderHist As New Dictionary(Of String, String) From
+    {{"RONUMBER|| ", "SONumber"} _
+        , {"NAD|| ", "CustomerNumber"} _
+        , {"VIN|| ", "VIN"} _
+        , {"OPENED|| ", "DateIn"} _
+        , {"MILEAGE|| ", "OdometerIn"} _
+        , {"MILEAGEOUT||", "OdometerOut"} _
+        , {"FINALAMT1|| ", "CustomerTotal"} _
+        , {"DEDUCTAMT1|| ", "SubbletTotal"} _
+        , {"NAME|| ", "CustomerLastName"} _
+        , {"NOTE|| ", "Comments"}}
+
+
+
+    Dim tagsSOLabourHist As New Dictionary(Of String, String) From
+     {{"RO-NUMBER|| ", "SONumber"} _
+        , {"LINE-NUMBER|| ", "RequestLine"} _
+        , {"DLROPCODE01|| ", "OpCode"} _
+        , {"CONCERN-1|| ", "Cause"} _
+        , {"CONCERN-2|| ", "Complaint"}}
+
+    Dim tagsVehicleInventory As New Dictionary(Of String, String) From
+                {{"VIN|| ", "VIN"} _
+                 , {"NEWUSEDFLAG|| ", "STATUS"} _
+                 , {"STOCKNO|| ", "StockNumber"} _
+                 , {"MAKE|| ", "Make"} _
+                 , {"MODEL|| ", "Model"} _
+                 , {"TRIM||", "Trim"} _
+                 , {"YEAR|| ", "Year"} _
+                 , {"MODELNO|| ", "ModelNumber"} _
+                 , {"BODYTYPE||", "Body"} _
+                 , {"COLORCODE|| ", "ExteriorColor"} _
+                 , {"KEY1|| ", "DoorKeyCode"} _
+                 , {"KEY2|| ", "IgnitionKeyCode"} _
+                 , {"RECEIVEDATE|| ", "ReceivedDate"} _
+                 , {"INSVCDATE||", "InServiceDate"} _
+                 , {"CYLINDERS||", "Cylinders"} _
+                 , {"ENGINE||", "Engine"} _
+                 , {"TRANS||", "Transmission"} _
+                 , {"LIST||", "RetailPrice"} _
+                 , {"ORIGCOST||", "CostPrice"} _
+                 , {"INT-PRICE||", "InternetPrice"} _
+                 , {"SOLD-TO||", "Owner"}}
+
+    Dim tagsVehicles As New Dictionary(Of String, String) From
+                  {{"VIN|| ", "VIN"} _
+                 , {"NEWUSEDGLAG|| ", "STATUS"} _
+                 , {"STOCKNO|| ", "StockNumber"} _
+                 , {"MAKE|| ", "Make"} _
+                 , {"MODEL|| ", "Model"} _
+                 , {"TRIM||", "Trim"} _
+                 , {"YEAR|| ", "Year"} _
+                 , {"MODELNO|| ", "ModelNumber"} _
+                 , {"LICENSE|| ", "LicenseNumber"} _
+                 , {"COLORCODE|| ", "ExteriorColor"} _
+                 , {"LASTSVCDATE|| ", "LastServiceDate"} _
+                 , {"ODOMETERDEL||", "Odometer"} _
+                 , {"PREV-OWNER||", "OriginalOwner"} _
+                 , {"ENGINE||", "Engine"} _
+                 , {"BODYTYPE||", "Body"}}
+
+
+
+
 
     Dim _connectionString = "Data Source=localhost;Initial Catalog=DataWorldBlank;ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
 
@@ -30,38 +153,15 @@ Public Class RunCommand
     Public Sub New(mainWindowViewModel As MainWindowViewModel)
         _mainWindowViewModel = mainWindowViewModel
 
-        tagsCustomers.Add("NAD|| ", "CustomerNumber")
-        tagsCustomers.Add("NAME|| ", "LastName")
-        tagsCustomers.Add("ADDR1|| ", "Address")
-        tagsCustomers.Add("CITY|| ", "City")
-        tagsCustomers.Add("STATE|| ", "ProvinceState")
-        tagsCustomers.Add("ZIP||", "PostalZip")
-        tagsCustomers.Add("PHONE|| ", "HomePhone")
-        tagsCustomers.Add("PO|| ", "Comments")
-        tagsCustomers.Add("INTERNETADD||", "EmailAddress")
-        tagsCustomers.Add("CELLPHONE|| ", "CellPhone")
-        tagsCustomers.Add("BUSPHONE|| ", "BusinessPhone")
-        tagsCustomers.Add("AUTHVENDOR|| ", "CriticalMemo")
-        tagsCustomers.Add("CREDIT|| ", "Memo")
-        tagsCustomers.Add("CREDLIM||", "CreditLimit")
 
-        tagsParts.Add("PART|| ", "PartsNumber")
-        tagsParts.Add("DESC|| ", "PartDescription")
-        tagsParts.Add("BIN|| ", "Bin1")
-        tagsParts.Add("LIST|| ", "ListPrice")
-        tagsParts.Add("DLRNET|| ", "CostPrice")
-        tagsParts.Add("EXCHANGE|| ", "TradePrice")
-        tagsParts.Add("ONHAND|| ", "QuantityOnHand")
-        tagsParts.Add("LASTCHGDATE|| ", "LastTransactionDate")
-        tagsParts.Add("DATELASTSAL|| ", "LastPurchaseDate")
-        tagsParts.Add("STATUS|| ", "Status")
-        tagsParts.Add("ALTPART|| ", "AlternatePart")
-        tagsParts.Add("VEND|| ", "Manufacturer")
-        tagsParts.Add("SOURCE|| ", "Source")
-        tagsParts.Add("GROUP|| ", "PGroup")
-        tagsParts.Add("MAX|| ", "MaxQuantity")
-        tagsParts.Add("MIN|| ", "MinQuantity")
-        tagsParts.Add("PREVYRSALES|| ", "Comments")
+
+
+
+
+
+
+
+
 
 
 
@@ -128,6 +228,61 @@ Public Class RunCommand
 
     End Function
 
+    Private Function ParseLine(line As String) As String()
+        Dim result = line.Split(Chr(34))
+        result = result.Select(Function(x, i) If(i Mod 2 = 0, x, x.Replace(",", "[comma]").Replace(vbCrLf, "[newline]").Replace(vbCr, "[newline]").Replace(vbLf, "[newline]"))).ToArray
+        line = String.Join(Chr(34), result)
+        line = line.Replace(Chr(34) & Chr(34), "[Quote]")
+        line = line.Replace(Chr(34), "")
+        line = line.Replace("[Quote]", Chr(34))
+        Dim items = line.Split(",")
+        For i = 0 To items.Count - 1
+            If items(i) = Chr(34) Then items(i) = ""
+        Next
+        Return items.Select(Function(x) x.Replace("[comma]", ",").Replace("[newline]", vbCrLf).Trim).ToArray
+    End Function
+
+    Public Function ConvertCSVtoDataTable(ByVal strFilePath As String) As DataTable
+        Dim dt As DataTable = New DataTable()
+
+        Using sReader As StreamReader = New StreamReader(strFilePath)
+
+            Dim headers As String() = sReader.ReadLine().Split(","c)
+
+            For Each header As String In headers
+
+                header = header.Replace("""", String.Empty)
+                header = header.Replace(" ", String.Empty)
+                dt.Columns.Add(New DataColumn(header.ToString, GetType(String)))
+
+            Next
+            While Not sReader.EndOfStream
+                Dim line As String = sReader.ReadLine()
+                While line.Where(Function(x) x = Chr(34)).Count Mod 2 = 1
+                    line &= vbCrLf & sReader.ReadLine
+                End While
+                Dim row As String() = ParseLine(line)
+                Dim dr As DataRow = dt.NewRow()
+                For i As Integer = 0 To Math.Min(dt.Columns.Count - 2, row.Length - 1)
+                    row(i) = row(i).Replace("""", String.Empty).Trim
+                    dr(i) = row(i)
+
+
+
+
+
+                Next
+
+                dt.Rows.Add(dr)
+
+            End While
+
+        End Using
+
+        Return dt
+
+    End Function
+
     Private Function FileCleaner(filepath)
         Dim NLines As List(Of String) = New List(Of String)
         Dim lines As Array = File.ReadAllLines(filepath)
@@ -180,7 +335,7 @@ Public Class RunCommand
 
     End Function
 
-    Public Overrides Function ExecuteAsync(paramter As Object) As Task
+    Public Overrides Async Function ExecuteAsync(paramter As Object) As Task
         _customers = _mainWindowViewModel.Customers
         _partsinventory = _mainWindowViewModel.PartsInventory
         _partsinvoice = _mainWindowViewModel.PartsInvoice
@@ -192,12 +347,107 @@ Public Class RunCommand
         _dataWorld = _mainWindowViewModel.DataWorld
         ConnectionStringUpdater(_dataWorld)
 
+        Dim PartsCleaned As String
+        Await Task.Run(Sub() PartsCleaned = FileCleaner(_partsinventory))
+        _mainWindowViewModel.Status = "Parsing Parts Inventory"
+        Dim writingParts As DataTable = DFWriter(tagsPartsInventory, PartsCleaned)
+        _mainWindowViewModel.Status = "Loading Parts Inventory"
+        Await Task.Run(Sub() LoadData(writingParts, _connectionString, "PartsInventory", tagsPartsInventory))
 
-
-        Dim CustomerCleaned As String = FileCleaner(_customers)
+        Dim CustomerCleaned As String
+        _mainWindowViewModel.Status = "Parsing Customers"
+        Await Task.Run(Sub() CustomerCleaned = FileCleaner(_customers))
         Dim dt As DataTable = DFWriter(tagsCustomers, CustomerCleaned)
-        LoadData(dt, _connectionString, "Customers", tagsCustomers)
-        Console.WriteLine("done!")
+        _mainWindowViewModel.Status = "Loading Customers"
+        Await Task.Run(Sub() LoadData(dt, _connectionString, "Customers", tagsCustomers))
+
+        Dim VehicleInventoryCleaned As String
+        _mainWindowViewModel.Status = "Parsing VehicleInventory"
+        Await Task.Run(Sub() VehicleInventoryCleaned = FileCleaner(_vehicleinventory))
+        Dim writingeVehicleInventory As DataTable = DFWriter(tagsVehicleInventory, VehicleInventoryCleaned)
+        _mainWindowViewModel.Status = "Loading VehicleInventory"
+        Await Task.Run(Sub() LoadData(writingeVehicleInventory, _connectionString, "VehicleInventory", tagsVehicleInventory))
+
+        Dim VehiclesCleaned As String
+        _mainWindowViewModel.Status = "Parsing Vehicles"
+        Await Task.Run(Sub() VehiclesCleaned = FileCleaner(_vehicles))
+        Dim WritingVehicles As DataTable = DFWriter(tagsVehicles, VehiclesCleaned)
+        _mainWindowViewModel.Status = "Loading Vehicles"
+        Await Task.Run(Sub() LoadData(WritingVehicles, _connectionString, "Vehicles", tagsVehicles))
+
+        Dim SOHeaderCleaned As String
+        _mainWindowViewModel.Status = "Parsing SOHeaderHist"
+        Await Task.Run(Sub() SOHeaderCleaned = FileCleaner(_soheaderhist))
+        Dim WritingSOHeaderHist As DataTable = DFWriter(tagsSOHeaderHist, SOHeaderCleaned)
+        _mainWindowViewModel.Status = "Loading SOHeaderHist"
+        Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist", tagsSOHeaderHist))
+
+
+
+        'SOPartInvoice 'TODO
+        Dim WritingPartsInvoice As DataTable
+        _mainWindowViewModel.Status = "Parsing PartsInvoice"
+        Await Task.Run(Sub() WritingPartsInvoice = ConvertCSVtoDataTable(_partsinvoice))
+        Dim SOPartHistDWRaw As DataTable = New DataTable()
+        Dim partsInvoiceDWRaw As DataTable = New DataTable()
+        Dim qry = From dr As DataRow In WritingPartsInvoice.AsEnumerable()
+                  Where Not dr.Field(Of String)("RO#").Equals("")
+                  Select dr
+        SOPartHistDWRaw = qry.CopyToDataTable()
+        Dim qry2 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
+                   Where Not dr2.Field(Of String)("Invoice#").Equals("")
+                   Select dr2
+        partsInvoiceDWRaw = qry2.CopyToDataTable()
+        Dim SOPartHistDWRaw2 As DataTable = New DataTable()
+        Dim partsInvoiceDWRaw2 As DataTable = New DataTable()
+        For Each col In SOPartHistDWRaw.Columns
+            If tagsSOPartHist.Keys.Contains(col.ToString()) Then
+                SOPartHistDWRaw2.Columns.Add(tagsSOPartHist(col.ToString()))
+            End If
+        Next
+
+        For Each col In partsInvoiceDWRaw.Columns
+            If tagsPartsInvoice.Keys.Contains(col.ToString()) Then
+                partsInvoiceDWRaw2.Columns.Add(tagsPartsInvoice(col.ToString()))
+            End If
+        Next
+
+
+
+
+        _mainWindowViewModel.Status = "Loading SOPartHist"
+
+        Await Task.Run(Sub() LoadData(SOPartHistDWRaw, _connectionString, "SOPartHist", tagsSOPartHist))
+        _mainWindowViewModel.Status = "Loading PartsInvoice"
+        Await Task.Run(Sub() LoadData(partsInvoiceDWRaw, _connectionString, "PartsInvoice", tagsPartsInvoice))
+
+
+        Dim SOLabourHistCleaned As String
+        _mainWindowViewModel.Status = "Parsing SOLabourHist"
+        Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
+        Dim WritingSOLabourHist As DataTable = DFWriter(tagsSOLabourHist, SOLabourHistCleaned)
+        _mainWindowViewModel.Status = "Loading SOLabourHist"
+        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SOLabourHist", tagsSOLabourHist))
+
+
+        _mainWindowViewModel.Status = "Conversion Finished!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        'Console.WriteLine("done!")
+
+
 
 
 
