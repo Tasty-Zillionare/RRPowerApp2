@@ -59,11 +59,10 @@ Public Class RunCommand
         , {"Qty", "QuantitySold"} _
         , {"Cost", "CostPrice"} _
         , {"List", "ListPrice"} _
-        , {"Sell", "SalesPrice"} _
         , {"RO#", "SONumber"} _
         , {"Line", "RequestLine"} _
         , {"Slsp", "CSR"} _
-        , {"Pay Type", "PayType"}}
+        , {"PayType", "PayType"}}
 
     Dim tagsPartsInvoice As New Dictionary(Of String, String) From
                 {{"NAD#", "CustomerNumber"} _
@@ -75,8 +74,8 @@ Public Class RunCommand
                 , {"List", "ListPrice"} _
                 , {"Invoice#", "InvoiceNumber"} _
                 , {"Slsp", "CSR"} _
-                , {"Pay Type", "PayType"} _
-                , {"Invoiced Date", "DateOpened"}}
+                , {"PayType", "PayType"} _
+                , {"InvoicedDate", "DateOpened"}}
 
     Dim tagsSOHeaderHist As New Dictionary(Of String, String) From
     {{"RONUMBER|| ", "SONumber"} _
@@ -101,12 +100,9 @@ Public Class RunCommand
 
     Dim tagsVehicleInventory As New Dictionary(Of String, String) From
                 {{"VIN|| ", "VIN"} _
-                 , {"NEWUSEDFLAG|| ", "STATUS"} _
                  , {"STOCKNO|| ", "StockNumber"} _
                  , {"MAKE|| ", "Make"} _
                  , {"MODEL|| ", "Model"} _
-                 , {"TRIM||", "Trim"} _
-                 , {"YEAR|| ", "Year"} _
                  , {"MODELNO|| ", "ModelNumber"} _
                  , {"BODYTYPE||", "Body"} _
                  , {"COLORCODE|| ", "ExteriorColor"} _
@@ -118,13 +114,16 @@ Public Class RunCommand
                  , {"ENGINE||", "Engine"} _
                  , {"TRANS||", "Transmission"} _
                  , {"LIST||", "RetailPrice"} _
+                 , {"NEWUSEDFLAG|| ", "Status"} _
                  , {"ORIGCOST||", "CostPrice"} _
-                 , {"INT-PRICE||", "InternetPrice"} _
-                 , {"SOLD-TO||", "Owner"}}
+                 , {"TRIM||", "Trim"} _
+                 , {"YEAR|| ", "Year"} _
+                 , {"SOLD-TO||", "Owner"} _
+                 , {"INT-PRICE||", "InternetPrice"}}
 
     Dim tagsVehicles As New Dictionary(Of String, String) From
                   {{"VIN|| ", "VIN"} _
-                 , {"NEWUSEDGLAG|| ", "STATUS"} _
+                 , {"NEWUSEDGLAG|| ", "Status"} _
                  , {"STOCKNO|| ", "StockNumber"} _
                  , {"MAKE|| ", "Make"} _
                  , {"MODEL|| ", "Model"} _
@@ -169,6 +168,7 @@ Public Class RunCommand
     End Sub
 
     Private Sub LoadData(dt As DataTable, connect_string As String, tableName As String, mapping As Dictionary(Of String, String))
+        Dim bads As String() = {}
 
         Using sourceConnection = New SqlConnection(connect_string)
             Try
@@ -180,10 +180,17 @@ Public Class RunCommand
             Using bulkCopy As System.Data.SqlClient.SqlBulkCopy = New SqlBulkCopy(sourceConnection)
                 bulkCopy.DestinationTableName = "dbo." & tableName
                 For Each map In mapping
-                    bulkCopy.ColumnMappings.Add(map.Value, map.Value)
+                    Dim destination As String
+                    If bads.Contains(map.Value.ToLower()) Then
+                        destination = "[" & map.Value & "]"
+                    Else
+                        destination = map.Value
+                    End If
+                    bulkCopy.ColumnMappings.Add(map.Value, destination)
                 Next
                 Try
                     bulkCopy.WriteToServer(dt)
+                    Console.WriteLine("fish")
                 Catch ex As Exception
 
                 End Try
@@ -335,6 +342,16 @@ Public Class RunCommand
 
     End Function
 
+    Private Async Function SendCommand(Query As String, conn_string As String) As Task(Of Integer)
+        Using connection = New SqlClient.SqlConnection(conn_string)
+            connection.Open()
+            Dim command = New SqlClient.SqlCommand(Query, connection)
+            command.CommandTimeout = 0
+            Return Await command.ExecuteNonQueryAsync()
+        End Using
+    End Function
+
+
     Public Overrides Async Function ExecuteAsync(paramter As Object) As Task
         _customers = _mainWindowViewModel.Customers
         _partsinventory = _mainWindowViewModel.PartsInventory
@@ -436,7 +453,11 @@ Public Class RunCommand
         Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
         Dim WritingSOLabourHist As DataTable = DFWriter(tagsSOLabourHist, SOLabourHistCleaned)
         _mainWindowViewModel.Status = "Loading SOLabourHist"
-        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SOLabourHist", tagsSOLabourHist))
+        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SORequestHist", tagsSOLabourHist))
+
+        _mainWindowViewModel.Status = "Sending CleanUp Queries"
+
+        Await SendCommand(Queries.Query, _connectionString)
 
 
         _mainWindowViewModel.Status = "Conversion Finished!"
