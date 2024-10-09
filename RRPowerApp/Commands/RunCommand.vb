@@ -394,21 +394,30 @@ Public Class RunCommand
                   Where Not dr.Field(Of String)("RO#").Equals("")
                   Select dr
         SOPartHistDWRaw = qry.CopyToDataTable()
+        'Dim SOPartHistDWRaw2 As DataTable = SOPartHistDWRaw.Copy()
+
+        Dim cols As DataColumn() = New DataColumn(SOPartHistDWRaw.Columns.Count - 1) {}
+
+        SOPartHistDWRaw.Columns.CopyTo(cols, 0)
+        For Each col In cols
+            If Not tagsSOPartHist.Keys.Contains(col.ToString()) Then
+                SOPartHistDWRaw.Columns.Remove(col)
+            Else
+                SOPartHistDWRaw.Columns(col.ToString()).ColumnName = tagsSOPartHist(col.ToString())
+            End If
+        Next
         Dim qry2 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
                    Where Not dr2.Field(Of String)("Invoice#").Equals("")
                    Select dr2
         partsInvoiceDWRaw = qry2.CopyToDataTable()
-        Dim SOPartHistDWRaw2 As DataTable = New DataTable()
-        Dim partsInvoiceDWRaw2 As DataTable = New DataTable()
-        For Each col In SOPartHistDWRaw.Columns
-            If tagsSOPartHist.Keys.Contains(col.ToString()) Then
-                SOPartHistDWRaw2.Columns.Add(tagsSOPartHist(col.ToString()))
-            End If
-        Next
-
-        For Each col In partsInvoiceDWRaw.Columns
-            If tagsPartsInvoice.Keys.Contains(col.ToString()) Then
-                partsInvoiceDWRaw2.Columns.Add(tagsPartsInvoice(col.ToString()))
+        'Dim partsInvoiceDWRaw2 As DataTable = partsInvoiceDWRaw.Copy()
+        Dim cols2 As DataColumn() = New DataColumn(partsInvoiceDWRaw.Columns.Count - 1) {}
+        partsInvoiceDWRaw.Columns.CopyTo(cols2, 0)
+        For Each col In cols2
+            If Not tagsPartsInvoice.Keys.Contains(col.ToString()) Then
+                partsInvoiceDWRaw.Columns.Remove(col)
+            Else
+                partsInvoiceDWRaw.Columns(col.ToString()).ColumnName = tagsPartsInvoice(col.ToString())
             End If
         Next
 
