@@ -45,7 +45,8 @@ Public Class RunCommand
         , {"BUSPHONE|| ", "BusinessPhone"} _
         , {"AUTHVENDOR|| ", "CriticalMemo"} _
         , {"CREDIT|| ", "Memo"} _
-        , {"CREDLIM||", "CreditLimit"}}
+        , {"CREDLIM||", "CreditLimit"} _
+        , {"$$$NONEXISTANT$$$", "FirstName"}}
 
 
 
@@ -190,23 +191,42 @@ Public Class RunCommand
 
         'TODO add in addtional customers and supplement with .txt pulls
 
+        _mainWindowViewModel.Status = "Parsing and Cleaning Customers from Customer History"
 
 
+        Dim CustHistCustomers As DataTable
+        Await Task.Run(Sub() CustHistCustomers = ConvertCSVtoDataTable(_customerscsv))
+        _mainWindowViewModel.Status = "Cleaning Customers from Customer History"
+        Await Task.Run(Sub()
 
-        Dim CustHistCustomers As DataTable = ConvertCSVtoDataTable(_customerscsv)
+                           Dim colsCustHist As DataColumn() = New DataColumn(CustHistCustomers.Columns.Count - 1) {}
+                           CustHistCustomers.Columns.CopyTo(colsCustHist, 0)
+                           For Each col In colsCustHist
+                               If Not mapCustomersfromHist.ContainsKey(col.ColumnName) Then
+                                   CustHistCustomers.Columns.Remove(col)
+                               Else
+                                   CustHistCustomers.Columns(col.ColumnName).ColumnName = mapCustomersfromHist(col.ColumnName)
+                               End If
+                           Next
+
+                           CustHistCustomers.Select("IsBusiness = 'Y'").ToList().ForEach(Sub(row) row("IsBusiness") = "B")
+                           CustHistCustomers.Columns.Add("FirstName")
+                           CustHistCustomers.AsEnumerable().Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
+                                                                      And x.Field(Of String)("IsBusiness") <> "B" _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LLC") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" INC") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LL") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LP") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LTD")
+                                                                      ).ToList().ForEach(Sub(row) row("FirstName") = row("LastName").Split(",")(1).Substring(1))
+
+                       End Sub
+                           )
+
+        Console.WriteLine("CustomersfromHistoryHaveBeenCleaned")
 
 
-        Dim colsCustHist As DataColumn() = New DataColumn(CustHistCustomers.Columns.Count - 1) {}
-        CustHistCustomers.Columns.CopyTo(colsCustHist, 0)
-        For Each col In colsCustHist
-            If Not mapCustomersfromHist.ContainsKey(col.ColumnName) Then
-                CustHistCustomers.Columns.Remove(col)
-            Else
-                CustHistCustomers.Columns(col.ColumnName).ColumnName = mapCustomersfromHist(col.ColumnName)
-            End If
-        Next
-
-        CustHistCustomers.Select("IsBusiness = 'Y'").ToList().ForEach(Sub(row) row("IsBusiness") = "B")
+        Await Task.Run(Sub() LoadData(CustHistCustomers, _connectionString, "Customers", mapCustomersfromHist))
 
 
 
