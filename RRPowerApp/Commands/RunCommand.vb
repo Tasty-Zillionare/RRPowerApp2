@@ -249,6 +249,12 @@ Public Class RunCommand
         '    End If
         'Next
 
+
+
+
+
+
+        'dt_Barcode = dt_Barcode.AsEnumerable().GroupBy(r >= New { ItemID = r.Field<Int64>("ItemID"), PacktypeId = r.Field < Int32 > ("PackTypeID") }).Select(g >= g.First()).CopyToDataTable();
         CustHistCustomers.Merge(dt, True)
         Dim seenCustomerNumbers As New Dictionary(Of String, String)
         For Each row In CustHistCustomers.AsEnumerable.ToList
