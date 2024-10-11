@@ -221,6 +221,8 @@ Public Class RunCommand
 
         Console.WriteLine("CustomersfromHistoryHaveBeenCleaned")
 
+        CustHistCustomers.AsEnumerable.ToList.ForEach(Sub(row) If row("CustomerNumber") = "" AndAlso row("OriginalCustomerNumber") <> "" Then row("CustomerNumber") = row("OriginalCustomerNumber") & "DN")
+
 
         Dim CustomerCleaned As String
         _mainWindowViewModel.Status = "Parsing Customers"
@@ -230,46 +232,14 @@ Public Class RunCommand
 
 
         Dim dt As DataTable = DFWriter(mapCustomers, CustomerCleaned)
+        CustHistCustomers.Merge(dt, False, MissingSchemaAction.Add)
+
+        Dim qrydups = CustHistCustomers.AsEnumerable.GroupBy(Function(r) r("CustomerNumber")).Select(Function(g) g.OrderByDescending(Function(y) y("OriginalCustomerNumber").ToString).FirstOrDefault)
+        CustHistCustomers = qrydups.CopyToDataTable()
+        Console.WriteLine("dups down")
 
 
-
-
-        For Each col In dt.Columns
-            Dim tArray As String() = CustHistCustomers.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray
-            If Not CustHistCustomers.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray.Contains(col.ColumnName) Then
-                CustHistCustomers.Columns.Add(col.ColumnName)
-            End If
-        Next
-        'For Each col In CustHistCustomers.Columns
-        '    Dim tArray As String() = dt.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray
-        '    If Not dt.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray.Contains(col.ColumnName) Then
-        '        Dim ncol As New DataColumn
-        '        ncol.DefaultValue = ""
-        '        dt.Columns.Add(ncol)
-        '    End If
-        'Next
-
-
-
-
-
-
-        'dt_Barcode = dt_Barcode.AsEnumerable().GroupBy(r >= New { ItemID = r.Field<Int64>("ItemID"), PacktypeId = r.Field < Int32 > ("PackTypeID") }).Select(g >= g.First()).CopyToDataTable();
-        CustHistCustomers.Merge(dt, True)
-        Dim seenCustomerNumbers As New Dictionary(Of String, String)
-        For Each row In CustHistCustomers.AsEnumerable.ToList
-            If Not IsDBNull(row("OriginalCustomerNumber")) AndAlso Not row("OriginalCustomerNumber") = "" Then
-                row("CustomerNumber") = row("OriginalCustomerNumber") & "DN"
-            End If
-            If seenCustomerNumbers.ContainsKey(row("CustomerNumber")) Then
-                CustHistCustomers.Rows.Remove(row)
-            Else
-                seenCustomerNumbers(row("CustomerNumber")) = ""
-            End If
-
-        Next
-
-
+        'Parse out names
         CustHistCustomers.Columns.Add("MiddleName")
         Dim ToBeFixedLastNameRows As List(Of DataRow) = CustHistCustomers.AsEnumerable().Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
                                                                       And Not x.Field(Of String)("LastName").Contains(" LLC") _
@@ -300,7 +270,7 @@ Public Class RunCommand
         Console.WriteLine("CustomersHistDone!")
 
 
-
+        'PartsInventory
         Dim PartsCleaned As String
         Await Task.Run(Sub() PartsCleaned = FileCleaner(_partsinventory))
         _mainWindowViewModel.Status = "Parsing Parts Inventory"
@@ -310,7 +280,7 @@ Public Class RunCommand
 
 
 
-
+        'VehicleInventory
         Dim VehicleInventoryCleaned As String
         _mainWindowViewModel.Status = "Parsing VehicleInventory"
         Await Task.Run(Sub() VehicleInventoryCleaned = FileCleaner(_vehicleinventory))
@@ -318,6 +288,9 @@ Public Class RunCommand
         _mainWindowViewModel.Status = "Loading VehicleInventory"
         Await Task.Run(Sub() LoadData(writingeVehicleInventory, _connectionString, "VehicleInventory"))
 
+
+
+        'Vehicles
         Dim VehiclesCleaned As String
         _mainWindowViewModel.Status = "Parsing Vehicles"
         Await Task.Run(Sub() VehiclesCleaned = FileCleaner(_vehicles))
@@ -356,10 +329,10 @@ Public Class RunCommand
                 SOPartHistDWRaw.Columns(col.ToString()).ColumnName = mapSOPartHist(col.ToString())
             End If
         Next
-        Dim qry2 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
+        Dim qry3 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
                    Where Not dr2.Field(Of String)("Invoice#").Equals("")
                    Select dr2
-        partsInvoiceDWRaw = qry2.CopyToDataTable()
+        partsInvoiceDWRaw = qry3.CopyToDataTable()
         'Dim partsInvoiceDWRaw2 As DataTable = partsInvoiceDWRaw.Copy()
         Dim cols2 As DataColumn() = New DataColumn(partsInvoiceDWRaw.Columns.Count - 1) {}
         partsInvoiceDWRaw.Columns.CopyTo(cols2, 0)
