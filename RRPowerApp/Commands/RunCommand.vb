@@ -161,7 +161,7 @@ Public Class RunCommand
     Dim _connectionString = "Data Source=localhost;Initial Catalog=DataWorldBlank;ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
 
     Private Sub ConnectionStringUpdater(dw As String)
-        If Not _connectionString = "" Then
+        If Not dw = "" Then
             _connectionString = "Data Source=localhost;Initial Catalog=" & dw & ";ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
         End If
     End Sub
@@ -210,15 +210,11 @@ Public Class RunCommand
                            Next
 
                            CustHistCustomers.Select("IsBusiness = 'Y'").ToList().ForEach(Sub(row) row("IsBusiness") = "B")
-                           CustHistCustomers.Columns.Add("FirstName")
-                           CustHistCustomers.AsEnumerable().Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
-                                                                      And x.Field(Of String)("IsBusiness") <> "B" _
-                                                                      And Not x.Field(Of String)("LastName").Contains(" LLC") _
-                                                                      And Not x.Field(Of String)("LastName").Contains(" INC") _
-                                                                      And Not x.Field(Of String)("LastName").Contains(" LL") _
-                                                                      And Not x.Field(Of String)("LastName").Contains(" LP") _
-                                                                      And Not x.Field(Of String)("LastName").Contains(" LTD")
-                                                                      ).ToList().ForEach(Sub(row) row("FirstName") = row("LastName").Split(",")(1).Substring(1))
+
+                           'Goal: Use Driver's Number where appropriate
+
+
+
 
                        End Sub
                            )
@@ -226,7 +222,69 @@ Public Class RunCommand
         Console.WriteLine("CustomersfromHistoryHaveBeenCleaned")
 
 
-        Await Task.Run(Sub() LoadData(CustHistCustomers, _connectionString, "Customers", mapCustomersfromHist))
+        Dim CustomerCleaned As String
+        _mainWindowViewModel.Status = "Parsing Customers"
+        Await Task.Run(Sub() CustomerCleaned = FileCleaner(_customers))
+
+
+
+
+        Dim dt As DataTable = DFWriter(mapCustomers, CustomerCleaned)
+
+
+
+
+        For Each col In dt.Columns
+            Dim tArray As String() = CustHistCustomers.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray
+            If Not CustHistCustomers.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray.Contains(col.ColumnName) Then
+                CustHistCustomers.Columns.Add(col.ColumnName)
+            End If
+        Next
+        'For Each col In CustHistCustomers.Columns
+        '    Dim tArray As String() = dt.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray
+        '    If Not dt.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray.Contains(col.ColumnName) Then
+        '        Dim ncol As New DataColumn
+        '        ncol.DefaultValue = ""
+        '        dt.Columns.Add(ncol)
+        '    End If
+        'Next
+
+        CustHistCustomers.Merge(dt, True)
+        Dim seenCustomerNumbers As New Dictionary(Of String, String)
+        For Each row In CustHistCustomers.AsEnumerable.ToList
+            If Not IsDBNull(row("OriginalCustomerNumber")) AndAlso Not row("OriginalCustomerNumber") = "" Then
+                row("CustomerNumber") = row("OriginalCustomerNumber") & "DN"
+            End If
+            If seenCustomerNumbers.ContainsKey(row("CustomerNumber")) Then
+                CustHistCustomers.Rows.Remove(row)
+            Else
+                seenCustomerNumbers(row("CustomerNumber")) = ""
+            End If
+
+        Next
+
+
+        CustHistCustomers.Columns.Add("MiddleName")
+        Dim ToBeFixedLastNameRows As List(Of DataRow) = CustHistCustomers.AsEnumerable().Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LLC") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" INC") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LL") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LP") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LTD")
+                                                                      ).ToList()
+        For Each row In ToBeFixedLastNameRows
+            row("FirstName") = row("LastName").Split(",")(1).Substring(1)
+            row("LastName") = row("LastName").Split(",")(0)
+            If row("FirstName").Split(" ").Length = 2 Then
+                row("MiddleName") = row("FirstName").Split(" ")(1)
+                Dim newFirst As String = row("FirstName").Split(" ")(0)
+                row("FirstName") = newFirst
+            End If
+        Next
+
+        _mainWindowViewModel.Status = "Loading Customers"
+
+        Await Task.Run(Sub() LoadData(CustHistCustomers, _connectionString, "Customers"))
 
 
 
@@ -235,43 +293,38 @@ Public Class RunCommand
 
         Console.WriteLine("CustomersHistDone!")
 
+
+
         Dim PartsCleaned As String
         Await Task.Run(Sub() PartsCleaned = FileCleaner(_partsinventory))
         _mainWindowViewModel.Status = "Parsing Parts Inventory"
         Dim writingParts As DataTable = DFWriter(mapPartsInventory, PartsCleaned)
         _mainWindowViewModel.Status = "Loading Parts Inventory"
-        Await Task.Run(Sub() LoadData(writingParts, _connectionString, "PartsInventory", mapPartsInventory))
+        Await Task.Run(Sub() LoadData(writingParts, _connectionString, "PartsInventory"))
 
 
 
-
-        Dim CustomerCleaned As String
-        _mainWindowViewModel.Status = "Parsing Customers"
-        Await Task.Run(Sub() CustomerCleaned = FileCleaner(_customers))
-        Dim dt As DataTable = DFWriter(mapCustomers, CustomerCleaned)
-        _mainWindowViewModel.Status = "Loading Customers"
-        Await Task.Run(Sub() LoadData(dt, _connectionString, "Customers", mapCustomers))
 
         Dim VehicleInventoryCleaned As String
         _mainWindowViewModel.Status = "Parsing VehicleInventory"
         Await Task.Run(Sub() VehicleInventoryCleaned = FileCleaner(_vehicleinventory))
         Dim writingeVehicleInventory As DataTable = DFWriter(mapVehicleInventory, VehicleInventoryCleaned)
         _mainWindowViewModel.Status = "Loading VehicleInventory"
-        Await Task.Run(Sub() LoadData(writingeVehicleInventory, _connectionString, "VehicleInventory", mapVehicleInventory))
+        Await Task.Run(Sub() LoadData(writingeVehicleInventory, _connectionString, "VehicleInventory"))
 
         Dim VehiclesCleaned As String
         _mainWindowViewModel.Status = "Parsing Vehicles"
         Await Task.Run(Sub() VehiclesCleaned = FileCleaner(_vehicles))
         Dim WritingVehicles As DataTable = DFWriter(mapVehicles, VehiclesCleaned)
         _mainWindowViewModel.Status = "Loading Vehicles"
-        Await Task.Run(Sub() LoadData(WritingVehicles, _connectionString, "Vehicles", mapVehicles))
+        Await Task.Run(Sub() LoadData(WritingVehicles, _connectionString, "Vehicles"))
 
         Dim SOHeaderCleaned As String
         _mainWindowViewModel.Status = "Parsing SOHeaderHist"
         Await Task.Run(Sub() SOHeaderCleaned = FileCleaner(_soheaderhist))
         Dim WritingSOHeaderHist As DataTable = DFWriter(mapSOHeaderHist, SOHeaderCleaned)
         _mainWindowViewModel.Status = "Loading SOHeaderHist"
-        Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist", mapSOHeaderHist))
+        Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
 
 
 
@@ -317,9 +370,9 @@ Public Class RunCommand
 
         _mainWindowViewModel.Status = "Loading SOPartHist"
 
-        Await Task.Run(Sub() LoadData(SOPartHistDWRaw, _connectionString, "SOPartHist", mapSOPartHist))
+        Await Task.Run(Sub() LoadData(SOPartHistDWRaw, _connectionString, "SOPartHist"))
         _mainWindowViewModel.Status = "Loading PartsInvoice"
-        Await Task.Run(Sub() LoadData(partsInvoiceDWRaw, _connectionString, "PartsInvoice", mapPartsInvoice))
+        Await Task.Run(Sub() LoadData(partsInvoiceDWRaw, _connectionString, "PartsInvoice"))
 
 
         Dim SOLabourHistCleaned As String
@@ -327,7 +380,7 @@ Public Class RunCommand
         Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
         Dim WritingSOLabourHist As DataTable = DFWriter(mapSOLabourHist, SOLabourHistCleaned)
         _mainWindowViewModel.Status = "Loading SOLabourHist"
-        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SORequestHist", mapSOLabourHist))
+        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SORequestHist"))
 
         _mainWindowViewModel.Status = "Sending CleanUp Queries"
 
@@ -361,7 +414,7 @@ Public Class RunCommand
 
     End Function
 
-    Private Sub LoadData(dt As DataTable, connect_string As String, tableName As String, mapping As Dictionary(Of String, String))
+    Private Sub LoadData(dt As DataTable, connect_string As String, tableName As String)
         Dim bads As String() = {}
 
         Using sourceConnection = New SqlConnection(connect_string)
@@ -373,14 +426,10 @@ Public Class RunCommand
 
             Using bulkCopy As System.Data.SqlClient.SqlBulkCopy = New SqlBulkCopy(sourceConnection)
                 bulkCopy.DestinationTableName = "dbo." & tableName
-                For Each map In mapping
-                    Dim destination As String
-                    If bads.Contains(map.Value.ToLower()) Then
-                        destination = "[" & map.Value & "]"
-                    Else
-                        destination = map.Value
-                    End If
-                    bulkCopy.ColumnMappings.Add(map.Value, destination)
+                For Each colName In dt.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray
+
+
+                    bulkCopy.ColumnMappings.Add(colName, colName)
                 Next
                 Try
                     bulkCopy.WriteToServer(dt)
