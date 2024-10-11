@@ -211,17 +211,15 @@ Public Class RunCommand
 
                            CustHistCustomers.Select("IsBusiness = 'Y'").ToList().ForEach(Sub(row) row("IsBusiness") = "B")
 
-                           'Goal: Use Driver's Number where appropriate
-
-
-
-
                        End Sub
                            )
 
         Console.WriteLine("CustomersfromHistoryHaveBeenCleaned")
 
+        'Use Driver's Number
         CustHistCustomers.AsEnumerable.ToList.ForEach(Sub(row) If row("CustomerNumber") = "" AndAlso row("OriginalCustomerNumber") <> "" Then row("CustomerNumber") = row("OriginalCustomerNumber") & "DN")
+        '
+
 
 
         Dim CustomerCleaned As String
@@ -233,21 +231,21 @@ Public Class RunCommand
 
         Dim dt As DataTable = DFWriter(mapCustomers, CustomerCleaned)
         CustHistCustomers.Merge(dt, False, MissingSchemaAction.Add)
+        CustHistCustomers = CustHistCustomers.AsEnumerable.GroupBy(Function(r) r("CustomerNumber")).Select(Function(g) g.OrderByDescending(Function(y) y("OriginalCustomerNumber").ToString).FirstOrDefault).CopyToDataTable
 
-        Dim qrydups = CustHistCustomers.AsEnumerable.GroupBy(Function(r) r("CustomerNumber")).Select(Function(g) g.OrderByDescending(Function(y) y("OriginalCustomerNumber").ToString).FirstOrDefault)
-        CustHistCustomers = qrydups.CopyToDataTable()
-        Console.WriteLine("dups down")
+
+
 
 
         'Parse out names
         CustHistCustomers.Columns.Add("MiddleName")
-        Dim ToBeFixedLastNameRows As List(Of DataRow) = CustHistCustomers.AsEnumerable().Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
+        Dim ToBeFixedLastNameRows As List(Of DataRow) = CustHistCustomers.AsEnumerable.Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
                                                                       And Not x.Field(Of String)("LastName").Contains(" LLC") _
                                                                       And Not x.Field(Of String)("LastName").Contains(" INC") _
                                                                       And Not x.Field(Of String)("LastName").Contains(" LL") _
                                                                       And Not x.Field(Of String)("LastName").Contains(" LP") _
                                                                       And Not x.Field(Of String)("LastName").Contains(" LTD")
-                                                                      ).ToList()
+                                                                      ).ToList
         For Each row In ToBeFixedLastNameRows
             row("FirstName") = row("LastName").Split(",")(1).Substring(1)
             row("LastName") = row("LastName").Split(",")(0)
@@ -257,6 +255,8 @@ Public Class RunCommand
                 row("FirstName") = newFirst
             End If
         Next
+        '
+
 
         _mainWindowViewModel.Status = "Loading Customers"
 
