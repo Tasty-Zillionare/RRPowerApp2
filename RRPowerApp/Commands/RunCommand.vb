@@ -45,8 +45,7 @@ Public Class RunCommand
         , {"BUSPHONE|| ", "BusinessPhone"} _
         , {"AUTHVENDOR|| ", "CriticalMemo"} _
         , {"CREDIT|| ", "Memo"} _
-        , {"CREDLIM||", "CreditLimit"} _
-        , {"$$$NONEXISTANT$$$", "FirstName"}}
+        , {"CREDLIM||", "CreditLimit"}}
 
 
 
@@ -245,6 +244,7 @@ Public Class RunCommand
 
 
         'Parse out names
+        CustHistCustomers.Columns.Add("FirstName")
         CustHistCustomers.Columns.Add("MiddleName")
         Dim ToBeFixedLastNameRows As List(Of DataRow) = CustHistCustomers.AsEnumerable.Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
                                                                       And Not x.Field(Of String)("LastName").Contains(" LLC") _
