@@ -321,8 +321,7 @@ Public Class RunCommand
 
         WritingSOHeaderHist.AsEnumerable.ToList.ForEach(Sub(row) If row("CustomerNumber").ToString.Trim = "" AndAlso row("OriginalCustomerNumber").ToString.Trim <> "" Then row("CustomerNumber") = row("OriginalCustomerNumber") & "DN")
 
-        _mainWindowViewModel.Status = "Loading SOHeaderHist"
-        Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
+
 
 
 
@@ -330,22 +329,22 @@ Public Class RunCommand
         Dim WritingPartsInvoice As DataTable
         _mainWindowViewModel.Status = "Parsing PartsInvoice"
         Await Task.Run(Sub() WritingPartsInvoice = ConvertCSVtoDataTable(_partsinvoice))
-        Dim SOPartHistDWRaw As DataTable = New DataTable()
+        Dim WritingSOPartHist As DataTable = New DataTable()
         Dim partsInvoiceDWRaw As DataTable = New DataTable()
         Dim qry = From dr As DataRow In WritingPartsInvoice.AsEnumerable()
                   Where Not dr.Field(Of String)("RO#").Equals("")
                   Select dr
-        SOPartHistDWRaw = qry.CopyToDataTable()
-        'Dim SOPartHistDWRaw2 As DataTable = SOPartHistDWRaw.Copy()
+        WritingSOPartHist = qry.CopyToDataTable()
+        'Dim SOPartHistDWRaw2 As DataTable = WritingSOPartHist.Copy()
 
-        Dim cols As DataColumn() = New DataColumn(SOPartHistDWRaw.Columns.Count - 1) {}
+        Dim cols As DataColumn() = New DataColumn(WritingSOPartHist.Columns.Count - 1) {}
 
-        SOPartHistDWRaw.Columns.CopyTo(cols, 0)
+        WritingSOPartHist.Columns.CopyTo(cols, 0)
         For Each col In cols
             If Not mapSOPartHist.Keys.Contains(col.ToString()) Then
-                SOPartHistDWRaw.Columns.Remove(col)
+                WritingSOPartHist.Columns.Remove(col)
             Else
-                SOPartHistDWRaw.Columns(col.ToString()).ColumnName = mapSOPartHist(col.ToString())
+                WritingSOPartHist.Columns(col.ToString()).ColumnName = mapSOPartHist(col.ToString())
             End If
         Next
         Dim qry3 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
@@ -365,13 +364,13 @@ Public Class RunCommand
 
 
         'PaytypeSOPartHistBlanking
-        SOPartHistDWRaw.AsEnumerable.ToList.ForEach(Sub(row) If Not {"C", "W", "I"}.Contains(row("PayType")) Then row("PayType") = "")
+        WritingSOPartHist.AsEnumerable.ToList.ForEach(Sub(row) If Not {"C", "W", "I"}.Contains(row("PayType")) Then row("PayType") = "")
 
 
 
         _mainWindowViewModel.Status = "Loading SOPartHist"
 
-        Await Task.Run(Sub() LoadData(SOPartHistDWRaw, _connectionString, "SOPartHist"))
+        Await Task.Run(Sub() LoadData(WritingSOPartHist, _connectionString, "SOPartHist"))
         _mainWindowViewModel.Status = "Loading PartsInvoice"
         Await Task.Run(Sub() LoadData(partsInvoiceDWRaw, _connectionString, "PartsInvoice"))
 
@@ -380,8 +379,55 @@ Public Class RunCommand
         _mainWindowViewModel.Status = "Parsing SOLabourHist"
         Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
         Dim WritingSOLabourHist As DataTable = DFWriter(mapSOLabourHist, SOLabourHistCleaned)
+
+
+        WritingSOLabourHist.Columns.Add("PayType")
+        WritingSOLabourHist.Columns.Add("CSR")
+
+
+        'SONumberSOPartHistMissingSOLabourHistInsert
+        Dim MissingSOPartRowsFromSOLabour As DataRow() = WritingSOPartHist.AsEnumerable.Where(Function(x) Not WritingSOLabourHist.AsEnumerable.Select(Function(row) row("SONumber").ToString).ToArray.Contains(x("SONumber"))).ToArray
+        For Each row In MissingSOPartRowsFromSOLabour
+            Dim insertRow As DataRow = WritingSOLabourHist.NewRow
+            insertRow("SONumber") = row("SONumber")
+            insertRow("CSR") = row("CSR")
+            insertRow("PayType") = row("PayType")
+            insertRow("RequestLine") = row("RequestLine")
+            WritingSOLabourHist.Rows.Add(insertRow)
+        Next
+        '
+
+        WritingSOHeaderHist.Columns.Add("CSROpen")
+        WritingSOHeaderHist.Columns.Add("CSRClose")
+        WritingSOHeaderHist.Columns.Add("PayType")
+        WritingSOHeaderHist.Columns.Add("OriginalSONumber")
+
+
+        'SONumber SOPartHist Missing SOHeaderHist Insert
+        Dim rws As DataRow() = WritingSOPartHist.AsEnumerable.Where(Function(x) Not WritingSOHeaderHist.AsEnumerable.Select(Function(row) row("SONumber").ToString).ToArray.Contains(x("SONumber"))).ToArray
+        For Each row In rws
+            Dim insertRow As DataRow = WritingSOHeaderHist.NewRow
+            insertRow("SONumber") = row("SONumber")
+            insertRow("CSROpen") = row("CSR")
+            insertRow("CSRClose") = row("CSR")
+            insertRow("PayType") = row("PayType")
+            insertRow("CustomerLastName") = row("OriginalSONumber")
+            WritingSOHeaderHist.Rows.Add(insertRow)
+        Next
+        '
+        WritingSOLabourHist.Columns.Add("OriginalSONumber")
+        WritingSOLabourHist.AsEnumerable.ToList.ForEach(Sub(row) row("OriginalSONumber") = row("RequestLine"))
+        'Eliminate Dups first
+
+        'WritingSOLabourHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).Select(Function(g) New With {Key .Group = g, Key .count = g.Count()}).AsEnumerable.ToList.ForEach(Sub(row) row.Group.ToList.ForEach(Sub(row2) row2("RequestLine") = row.count))
+        WritingSOLabourHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).SelectMany(Function(x) x.Select(Function(j, i) New With {j, Key .rn = i + 1})).AsEnumerable.ToList.ForEach(Sub(r) r.j("RequestLine") = r.rn)
+
+
         _mainWindowViewModel.Status = "Loading SOLabourHist"
         Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SORequestHist"))
+
+        _mainWindowViewModel.Status = "Loading SOHeaderHist"
+        Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
 
         _mainWindowViewModel.Status = "Sending CleanUp Queries"
 

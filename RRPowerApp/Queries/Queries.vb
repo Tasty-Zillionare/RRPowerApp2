@@ -4,10 +4,6 @@
     '     with q as (select ROW_NUMBER() over(partition by vin order by datein desc) rn , * from soheaderhist where Customerlastname <> '' or customernumber <> '') update a set owner = q.customernumber from Vehicles a inner join q on a.VIN = q.VIN where q.rn = 1 and a.Owner = '' and q.customernumber <> '';
     '   with q as (select ROW_NUMBER() over(partition by vin order by datein desc) rn , * from soheaderhist where customerlastName <> '' or customernumber <> '') update a set LastNameOwner = q.CustomerLastName  from Vehicles a inner join q on a.VIN = q.VIN where q.rn = 1 and a.LastNameOwner = '' and q.CustomerLastName <> '';
     Public Shared Property Query As String = "update Vehicles set LastNameOwner = OriginalOwner where LastNameOwner = '' and OriginalOwner <> '';
-        update SOPartHist set PayType = '' where PayType not in ('C','W','I');
-        insert into sorequesthist (SONumber,CSR,PayType,RequestLine ) select a.SONumber,a.CSR,a.PayType,a.RequestLine from SOPartHist a left join SORequestHist b on a.SONumber = b.SONumber and a.RequestLine = b.RequestLine where b.sonumber is null;
-        insert into SOHeaderHist (SONumber,CSROpen,CSRClose,PayType,CustomerLastName ) select a.SONumber,a.CSR,a.CSR,a.PayType,a.OriginalSONumber from SOPartHist a left join SOHeaderHist b on a.SONumber = b.SONumber where b.sonumber is null;
-        update SORequestHist set originalsonumber = requestline;
         with q as (select ROW_NUMBER() over (partition by sonumber order by requestline ) rn , * from SORequestHist) update q set requestline = rn;
         insert into SOLabourHist (SONumber, RequestLine, OpCode,originalsonumber) select distinct SONumber, RequestLine,OpCode, OriginalSONumber    from SORequestHist;
         update SORequestHist set Complaint = CONCAT(cause, complaint) , Cause = '';
