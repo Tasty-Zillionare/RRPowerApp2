@@ -200,6 +200,7 @@ Public Class RunCommand
         _mainWindowViewModel.Status = "Parsing and Cleaning Customers from Customer History"
 
 
+
         Dim CustHistCustomers As DataTable
         Await Task.Run(Sub() CustHistCustomers = ConvertCSVtoDataTable(_customerscsv))
         _mainWindowViewModel.Status = "Cleaning Customers from Customer History"
@@ -362,6 +363,9 @@ Public Class RunCommand
             End If
         Next
 
+
+        'PaytypeSOPartHistBlanking
+        SOPartHistDWRaw.AsEnumerable.ToList.ForEach(Sub(row) If Not {"C", "W", "I"}.Contains(row("PayType")) Then row("PayType") = "")
 
 
 
