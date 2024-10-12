@@ -432,7 +432,7 @@ Public Class RunCommand
                     bulkCopy.WriteToServer(dt)
                     Console.WriteLine("fish")
                 Catch ex As Exception
-
+                    Throw ex
                 End Try
 
 
