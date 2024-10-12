@@ -69,8 +69,29 @@ Public Class RunCommand
         , {"MIN|| ", "MinQuantity"} _
         , {"PREVYRSALES|| ", "Comments"}}
 
+    Dim mapSOHeaderHist As New Dictionary(Of String, String) From
+    {{"RONUMBER|| ", "SONumber"} _
+        , {"NAD|| ", "CustomerNumber"} _
+        , {"VIN|| ", "VIN"} _
+        , {"OPENED|| ", "DateIn"} _
+        , {"MILEAGE|| ", "OdometerIn"} _
+        , {"MILEAGEOUT||", "OdometerOut"} _
+        , {"FINALAMT1|| ", "CustomerTotal"} _
+        , {"DEDUCTAMT1|| ", "SubbletTotal"} _
+        , {"NAME|| ", "CustomerLastName"} _
+        , {"NOTE|| ", "Comments"} _
+        , {"DRIVER-NUM|| ", "OriginalCustomerNumber"}}
+
+    Dim mapSOLabourHist As New Dictionary(Of String, String) From
+     {{"RO-NUMBER|| ", "SONumber"} _
+        , {"LINE-NUMBER|| ", "RequestLine"} _
+        , {"DLROPCODE01|| ", "OpCode"} _
+        , {"CONCERN-1|| ", "Cause"} _
+        , {"CONCERN-2|| ", "Complaint"}}
+
     Dim mapSOPartHist As New Dictionary(Of String, String) From
            {{"Part", "PartNumber"} _
+           , {"Name", "OriginalSONumber"} _
         , {"Description", "PartDescription"} _
         , {"Qty", "QuantitySold"} _
         , {"Cost", "CostPrice"} _
@@ -93,26 +114,11 @@ Public Class RunCommand
                 , {"PayType", "PayType"} _
                 , {"InvoicedDate", "DateOpened"}}
 
-    Dim mapSOHeaderHist As New Dictionary(Of String, String) From
-    {{"RONUMBER|| ", "SONumber"} _
-        , {"NAD|| ", "CustomerNumber"} _
-        , {"VIN|| ", "VIN"} _
-        , {"OPENED|| ", "DateIn"} _
-        , {"MILEAGE|| ", "OdometerIn"} _
-        , {"MILEAGEOUT||", "OdometerOut"} _
-        , {"FINALAMT1|| ", "CustomerTotal"} _
-        , {"DEDUCTAMT1|| ", "SubbletTotal"} _
-        , {"NAME|| ", "CustomerLastName"} _
-        , {"NOTE|| ", "Comments"}}
 
 
 
-    Dim mapSOLabourHist As New Dictionary(Of String, String) From
-     {{"RO-NUMBER|| ", "SONumber"} _
-        , {"LINE-NUMBER|| ", "RequestLine"} _
-        , {"DLROPCODE01|| ", "OpCode"} _
-        , {"CONCERN-1|| ", "Cause"} _
-        , {"CONCERN-2|| ", "Complaint"}}
+
+
 
     Dim mapVehicleInventory As New Dictionary(Of String, String) From
                 {{"VIN|| ", "VIN"} _
@@ -150,9 +156,10 @@ Public Class RunCommand
                  , {"COLORCODE|| ", "ExteriorColor"} _
                  , {"LASTSVCDATE|| ", "LastServiceDate"} _
                  , {"ODOMETERDEL||", "Odometer"} _
-                 , {"PREV-OWNER||", "OriginalOwner"} _
+                 , {"PREV-OWNER||", "Owner"} _
                  , {"ENGINE||", "Engine"} _
-                 , {"BODYTYPE||", "Body"}}
+                 , {"BODYTYPE||", "Body"} _
+                  , {"LASTDRIVER#||", "OriginalOwner"}}
 
 
 
@@ -295,13 +302,24 @@ Public Class RunCommand
         _mainWindowViewModel.Status = "Parsing Vehicles"
         Await Task.Run(Sub() VehiclesCleaned = FileCleaner(_vehicles))
         Dim WritingVehicles As DataTable = DFWriter(mapVehicles, VehiclesCleaned)
+
+        WritingVehicles.AsEnumerable.ToList.ForEach(Sub(row) If row("OriginalOwner").ToString.Trim <> "" Then row("Owner") = row("OriginalOwner") & "DN")
+
+
         _mainWindowViewModel.Status = "Loading Vehicles"
         Await Task.Run(Sub() LoadData(WritingVehicles, _connectionString, "Vehicles"))
 
+
+
+
+        'SOHeaderHist
         Dim SOHeaderCleaned As String
         _mainWindowViewModel.Status = "Parsing SOHeaderHist"
         Await Task.Run(Sub() SOHeaderCleaned = FileCleaner(_soheaderhist))
         Dim WritingSOHeaderHist As DataTable = DFWriter(mapSOHeaderHist, SOHeaderCleaned)
+
+        WritingSOHeaderHist.AsEnumerable.ToList.ForEach(Sub(row) If row("CustomerNumber").ToString.Trim = "" AndAlso row("OriginalCustomerNumber").ToString.Trim <> "" Then row("CustomerNumber") = row("OriginalCustomerNumber") & "DN")
+
         _mainWindowViewModel.Status = "Loading SOHeaderHist"
         Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
 
