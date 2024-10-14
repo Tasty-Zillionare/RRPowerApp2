@@ -378,22 +378,22 @@ Public Class RunCommand
         Dim SOLabourHistCleaned As String
         _mainWindowViewModel.Status = "Parsing SOLabourHist"
         Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
-        Dim WritingSOLabourHist As DataTable = DFWriter(mapSOLabourHist, SOLabourHistCleaned)
+        Dim WritingSORequestHist As DataTable = DFWriter(mapSOLabourHist, SOLabourHistCleaned)
 
 
-        WritingSOLabourHist.Columns.Add("PayType")
-        WritingSOLabourHist.Columns.Add("CSR")
+        WritingSORequestHist.Columns.Add("PayType")
+        WritingSORequestHist.Columns.Add("CSR")
 
 
         'SONumberSOPartHistMissingSOLabourHistInsert
-        Dim MissingSOPartRowsFromSOLabour As DataRow() = WritingSOPartHist.AsEnumerable.Where(Function(x) Not WritingSOLabourHist.AsEnumerable.Select(Function(row) row("SONumber").ToString).ToArray.Contains(x("SONumber"))).ToArray
+        Dim MissingSOPartRowsFromSOLabour As DataRow() = WritingSOPartHist.AsEnumerable.Where(Function(x) Not WritingSORequestHist.AsEnumerable.Select(Function(row) row("SONumber").ToString).ToArray.Contains(x("SONumber"))).ToArray
         For Each row In MissingSOPartRowsFromSOLabour
-            Dim insertRow As DataRow = WritingSOLabourHist.NewRow
+            Dim insertRow As DataRow = WritingSORequestHist.NewRow
             insertRow("SONumber") = row("SONumber")
             insertRow("CSR") = row("CSR")
             insertRow("PayType") = row("PayType")
             insertRow("RequestLine") = row("RequestLine")
-            WritingSOLabourHist.Rows.Add(insertRow)
+            WritingSORequestHist.Rows.Add(insertRow)
         Next
         '
 
@@ -415,17 +415,33 @@ Public Class RunCommand
             WritingSOHeaderHist.Rows.Add(insertRow)
         Next
         '
-        WritingSOLabourHist.Columns.Add("OriginalSONumber")
-        WritingSOLabourHist.AsEnumerable.ToList.ForEach(Sub(row) row("OriginalSONumber") = row("RequestLine"))
+        WritingSORequestHist.Columns.Add("OriginalSONumber")
+        WritingSORequestHist.AsEnumerable.ToList.ForEach(Sub(row) row("OriginalSONumber") = row("RequestLine"))
         'Eliminate Dups first
 
-        'WritingSOLabourHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).Select(Function(g) New With {Key .Group = g, Key .count = g.Count()}).AsEnumerable.ToList.ForEach(Sub(row) row.Group.ToList.ForEach(Sub(row2) row2("RequestLine") = row.count))
-        WritingSOLabourHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).SelectMany(Function(x) x.Select(Function(j, i) New With {j, Key .rn = i + 1})).AsEnumerable.ToList.ForEach(Sub(r) r.j("RequestLine") = r.rn)
+        'WritingSORequestHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).Select(Function(g) New With {Key .Group = g, Key .count = g.Count()}).AsEnumerable.ToList.ForEach(Sub(row) row.Group.ToList.ForEach(Sub(row2) row2("RequestLine") = row.count))
+        WritingSORequestHist = WritingSORequestHist.AsEnumerable.GroupBy(Function(x) New With {Key .SONumber = x("SONumber"), Key .OpCode = x("OpCode"), Key .OriginalSONumber = x("OriginalSONumber")}).Select(Function(g) g.First).CopyToDataTable
+        WritingSORequestHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).SelectMany(Function(x) x.Select(Function(j, i) New With {j, Key .rn = i + 1})).AsEnumerable.ToList.ForEach(Sub(r) r.j("RequestLine") = r.rn)
+
+
+        Dim WritingSOLabourHist As DataTable = WritingSORequestHist.DefaultView.ToTable(True, "SONumber", "RequestLine", "OpCode", "OriginalSONumber")
+
+        WritingSORequestHist.AsEnumerable.ToList.ForEach(Sub(row)
+                                                             row("Complaint") = row("Cause") & " " & row("Complaint")
+                                                             row("Cause") = ""
+                                                         End Sub)
+
+        Dim ToAdd = WritingSORequestHist.AsEnumerable.Where(Function(x) Not WritingSOHeaderHist.AsEnumerable.Select(Function(row) row("SONumber")).ToHashSet.Contains(x("SONumber"))).CopyToDataTable
+        ToAdd.DefaultView.ToTable(True, "SONumber").AsEnumerable.ToList.ForEach(Sub(row)
+                                                                                    Dim newRow = WritingSOHeaderHist.NewRow
+                                                                                    newRow("SONumber") = row("SONumber")
+                                                                                    WritingSOHeaderHist.Rows.Add(newRow)
+                                                                                End Sub)
 
 
         _mainWindowViewModel.Status = "Loading SOLabourHist"
-        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SORequestHist"))
-
+        Await Task.Run(Sub() LoadData(WritingSORequestHist, _connectionString, "SORequestHist"))
+        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SOLabourHist"))
         _mainWindowViewModel.Status = "Loading SOHeaderHist"
         Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
 

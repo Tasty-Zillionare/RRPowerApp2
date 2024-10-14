@@ -3,11 +3,9 @@
 
     '     with q as (select ROW_NUMBER() over(partition by vin order by datein desc) rn , * from soheaderhist where Customerlastname <> '' or customernumber <> '') update a set owner = q.customernumber from Vehicles a inner join q on a.VIN = q.VIN where q.rn = 1 and a.Owner = '' and q.customernumber <> '';
     '   with q as (select ROW_NUMBER() over(partition by vin order by datein desc) rn , * from soheaderhist where customerlastName <> '' or customernumber <> '') update a set LastNameOwner = q.CustomerLastName  from Vehicles a inner join q on a.VIN = q.VIN where q.rn = 1 and a.LastNameOwner = '' and q.CustomerLastName <> '';
-    Public Shared Property Query As String = "update Vehicles set LastNameOwner = OriginalOwner where LastNameOwner = '' and OriginalOwner <> '';
-        with q as (select ROW_NUMBER() over (partition by sonumber order by requestline ) rn , * from SORequestHist) update q set requestline = rn;
-        insert into SOLabourHist (SONumber, RequestLine, OpCode,originalsonumber) select distinct SONumber, RequestLine,OpCode, OriginalSONumber    from SORequestHist;
-        update SORequestHist set Complaint = CONCAT(cause, complaint) , Cause = '';
-        insert into SOHeaderHist (SONumber) select distinct a.sonumber from SORequestHist a left join SOHeaderHist b on a.SONumber = b.SONumber where b.SONumber is null;
+    Public Shared Property Query As String = "update Vehicles set LastNameOwner = OriginalOwner where LastNameOwner = '' and OriginalOwner <> ''; 
+        
+        
         update a set requestline = b.RequestLine from SOPartHist a inner join SORequestHist b on a.SONumber = b.SONumber and b.OriginalSONumber = a.RequestLine;
         insert into ARCustomers (ARCustomerNumber,LastName,FirstName,MiddleName,Address,City,ProvinceState,PostalZip,Country,HomePhone,BusinessPhone,CellPhone,EmailAddress,CreditLimit) select  CustomerNumber,LastName, FirstName, MiddleName, Address , City ,ProvinceState , PostalZip, Country, HomePhone, BusinessPhone, CellPhone, EmailAddress ,CreditLimit from Customers where memo = '1';
         insert into APVendors (APVendorNumber, LastName ,FirstName, middlename, address, city, ProvinceState, PostalZip, Country, HomePhone, BusinessPhone, CellPhone,EmailAddress) select CustomerNumber, LastName , FirstName , MiddleName , Address, City, ProvinceState, PostalZip ,Country, HomePhone , BusinessPhone, cellphone,	EmailAddress from Customers where CriticalMemo = 'Y';
