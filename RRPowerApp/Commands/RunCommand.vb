@@ -271,7 +271,14 @@ Public Class RunCommand
         Await Task.Run(Sub() LoadData(CustHistCustomers, _connectionString, "Customers"))
 
 
+        Dim WritingARCustomers As DataTable = CustHistCustomers.AsEnumerable.Where(Function(x) x("Memo") = "1").CopyToDataTable
+        For Each col In WritingARCustomers.Columns
+            If col.ToString = "CustomerNumber" Then
+                WritingARCustomers.Columns(col.ToString).ColumnName = "ARCustomerNumber"
+            End If
 
+            End If
+        Next
 
 
 
@@ -448,11 +455,12 @@ Public Class RunCommand
         joiner = joiner.ToList
         joiner.ToList.ForEach(Sub(rowSet) rowSet.t1("RequestLine") = rowSet.t2("RequestLine"))
 
-        _mainWindowViewModel.Status = "Loading SOLabourHist"
 
 
 
+        _mainWindowViewModel.Status = "Loading SORequestHist"
         Await Task.Run(Sub() LoadData(WritingSORequestHist, _connectionString, "SORequestHist"))
+        _mainWindowViewModel.Status = "Loading SOLabourHist"
         Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SOLabourHist"))
         _mainWindowViewModel.Status = "Loading SOHeaderHist"
         Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
