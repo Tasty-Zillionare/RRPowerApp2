@@ -6,11 +6,7 @@
     Public Shared Property Query As String = "update Vehicles set LastNameOwner = OriginalOwner where LastNameOwner = '' and OriginalOwner <> ''; 
         
         
-        
-        insert into ARCustomers (ARCustomerNumber,LastName,FirstName,MiddleName,Address,City,ProvinceState,PostalZip,Country,HomePhone,BusinessPhone,CellPhone,EmailAddress,CreditLimit) select  CustomerNumber,LastName, FirstName, MiddleName, Address , City ,ProvinceState , PostalZip, Country, HomePhone, BusinessPhone, CellPhone, EmailAddress ,CreditLimit from Customers where memo = '1';
-        insert into APVendors (APVendorNumber, LastName ,FirstName, middlename, address, city, ProvinceState, PostalZip, Country, HomePhone, BusinessPhone, CellPhone,EmailAddress) select CustomerNumber, LastName , FirstName , MiddleName , Address, City, ProvinceState, PostalZip ,Country, HomePhone , BusinessPhone, cellphone,	EmailAddress from Customers where CriticalMemo = 'Y';
-        update Customers set customernumber = trim(customernumber);
-        update PartsInvoice set customernumber = trim(customernumber);
+     
         update a set a.CustomerLastName = b.LastName, a.CustomerFirstName = b.FirstName, a.CustomerHomePhone = b.HomePhone, a.CustomerBusinessPhone = BusinessPhone, a.CustomerAddress = b.Address, a.CustomerCity = b.City, a.CustomerPostalZip = b.PostalZip from PartsInvoice a inner join Customers b on trim(a.CustomerNumber) = trim(b.CustomerNumber);
         update Customers set Memo = '', CriticalMemo = '';
         delete from VehicleInventory where Owner <> '';

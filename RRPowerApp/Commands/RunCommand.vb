@@ -271,14 +271,30 @@ Public Class RunCommand
         Await Task.Run(Sub() LoadData(CustHistCustomers, _connectionString, "Customers"))
 
 
-        Dim WritingARCustomers As DataTable = CustHistCustomers.AsEnumerable.Where(Function(x) x("Memo") = "1").CopyToDataTable
-        For Each col In WritingARCustomers.Columns
-            If col.ToString = "CustomerNumber" Then
-                WritingARCustomers.Columns(col.ToString).ColumnName = "ARCustomerNumber"
-            End If
+        Dim WritingARCustomers As DataTable = CustHistCustomers.AsEnumerable.Where(Function(x) Not IsDBNull(x("Memo")) AndAlso x("Memo") = "1").CopyToDataTable
+        WritingARCustomers.Columns("CustomerNumber").ColumnName = "ARCustomerNumber"
+        Await Task.Run(Sub() LoadData(WritingARCustomers, _connectionString, "ARCustomers"))
 
-            End If
-        Next
+        Dim WritingAPVendors As DataTable = CustHistCustomers.AsEnumerable.Where(Function(x) Not IsDBNull(x("CriticalMemo")) AndAlso x("CriticalMemo") = "Y").CopyToDataTable
+        WritingARCustomers.Columns("CustomerNumber").ColumnName = "APVendorNumber"
+        Await Task.Run(Sub() LoadData(WritingAPVendors, _connectionString, "APVendors"))
+
+
+
+
+
+
+
+        'Dim maps As New Dictionary(Of String, String) From
+        '    {{"CustomerNumber", "ARCustomerNumber"} _
+        '    , {"CustomerNumber", "ARCustomerNumber"} _}
+        'For Each col In WritingARCustomers.Columns
+        '    If col.ToString = "CustomerNumber" Then
+        '        WritingARCustomers.Columns(col.ToString).ColumnName = "ARCustomerNumber"
+        '    ElseIf col.ToString = "CustomerNumber" Then
+        '        WritingARCustomers.Columns(col.ToString).ColumnName = "ARCustomerNumber"
+        '    End If
+        'Next
 
 
 
@@ -504,15 +520,26 @@ Public Class RunCommand
             Try
                 sourceConnection.Open()
             Catch ex As Exception
-
+                Throw ex
             End Try
+            Dim com As New SqlCommand("select b.name from sys.objects a 
+                                        inner join sys.columns b on a.object_id = b.object_id
+                                        where a.name = '" & tableName & "'", sourceConnection)
+            Dim headerReader = com.ExecuteReader
+            Dim Headers As New Dictionary(Of String, String)
+            If headerReader.HasRows Then
+                While headerReader.Read()
+                    Headers(headerReader.GetString(0)) = ""
+                End While
+            End If
+            headerReader.Close()
 
             Using bulkCopy As System.Data.SqlClient.SqlBulkCopy = New SqlBulkCopy(sourceConnection)
                 bulkCopy.DestinationTableName = "dbo." & tableName
                 For Each colName In dt.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray
-
-
-                    bulkCopy.ColumnMappings.Add(colName, colName)
+                    If Headers.ContainsKey(colName) Then
+                        bulkCopy.ColumnMappings.Add(colName, colName)
+                    End If
                 Next
                 Try
                     bulkCopy.WriteToServer(dt)
