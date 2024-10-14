@@ -437,9 +437,21 @@ Public Class RunCommand
                                                                                     newRow("SONumber") = row("SONumber")
                                                                                     WritingSOHeaderHist.Rows.Add(newRow)
                                                                                 End Sub)
+        'WritingSOPartHist.Columns.Add("OriginalSONumber")
+        WritingSOPartHist.AsEnumerable.ToList.ForEach(Sub(row) row("OriginalSONumber") = row("RequestLine"))
 
+        Dim joiner = From t1 In WritingSOPartHist.AsEnumerable
+                     Join t2 In WritingSORequestHist.AsEnumerable
+                         On t1.Field(Of String)("SONumber") Equals t2.Field(Of String)("SONumber") _
+                         And t1.Field(Of String)("OriginalSONumber") Equals t2.Field(Of String)("OriginalSONumber")
+                     Select New With {t1, t2}
+        joiner = joiner.ToList
+        joiner.ToList.ForEach(Sub(rowSet) rowSet.t1("RequestLine") = rowSet.t2("RequestLine"))
 
         _mainWindowViewModel.Status = "Loading SOLabourHist"
+
+
+
         Await Task.Run(Sub() LoadData(WritingSORequestHist, _connectionString, "SORequestHist"))
         Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SOLabourHist"))
         _mainWindowViewModel.Status = "Loading SOHeaderHist"

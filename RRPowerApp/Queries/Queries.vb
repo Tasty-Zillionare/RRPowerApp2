@@ -6,7 +6,7 @@
     Public Shared Property Query As String = "update Vehicles set LastNameOwner = OriginalOwner where LastNameOwner = '' and OriginalOwner <> ''; 
         
         
-        update a set requestline = b.RequestLine from SOPartHist a inner join SORequestHist b on a.SONumber = b.SONumber and b.OriginalSONumber = a.RequestLine;
+        
         insert into ARCustomers (ARCustomerNumber,LastName,FirstName,MiddleName,Address,City,ProvinceState,PostalZip,Country,HomePhone,BusinessPhone,CellPhone,EmailAddress,CreditLimit) select  CustomerNumber,LastName, FirstName, MiddleName, Address , City ,ProvinceState , PostalZip, Country, HomePhone, BusinessPhone, CellPhone, EmailAddress ,CreditLimit from Customers where memo = '1';
         insert into APVendors (APVendorNumber, LastName ,FirstName, middlename, address, city, ProvinceState, PostalZip, Country, HomePhone, BusinessPhone, CellPhone,EmailAddress) select CustomerNumber, LastName , FirstName , MiddleName , Address, City, ProvinceState, PostalZip ,Country, HomePhone , BusinessPhone, cellphone,	EmailAddress from Customers where CriticalMemo = 'Y';
         update Customers set customernumber = trim(customernumber);
