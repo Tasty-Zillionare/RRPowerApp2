@@ -510,7 +510,7 @@ Public Class RunCommand
                 End While
                 Dim row As String() = ParseLine(line)
                 Dim dr As DataRow = dt.NewRow()
-                For i As Integer = 0 To Math.Min(dt.Columns.Count - 2, row.Length - 1)
+                For i As Integer = 0 To Math.Min(dt.Columns.Count - 1, row.Length - 1)
                     row(i) = row(i).Replace("""", String.Empty).Trim
                     dr(i) = row(i)
 
