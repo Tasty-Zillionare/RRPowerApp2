@@ -16,7 +16,22 @@ Public Class RunCommand
     Private _dataWorld As String
 
 
-    Dim tagsCustomers As New Dictionary(Of String, String) From
+    Dim mapCustomersfromHist As New Dictionary(Of String, String) From
+           {{"Name", "LastName"} _
+        , {"Address", "Address"} _
+        , {"City", "City"} _
+        , {"ZIP", "PostalZip"} _
+        , {"HomeNumber", "HomePhone"} _
+        , {"DriverNumber", "OriginalCustomerNumber"} _
+        , {"NADNumber", "CustomerNumber"} _
+        , {"State", "ProvinceState"} _
+        , {"MainEmailAddress", "EmailAddress"} _
+        , {"CellNumber", "CellPhone"} _
+        , {"WorkNumber", "BusinessPhone"} _
+        , {"Company(Y/N)", "IsBusiness"}}
+
+
+    Dim mapCustomers As New Dictionary(Of String, String) From
            {{"NAD|| ", "CustomerNumber"} _
         , {"NAME|| ", "LastName"} _
         , {"ADDR1|| ", "Address"} _
@@ -34,7 +49,7 @@ Public Class RunCommand
 
 
 
-    Dim tagsPartsInventory As New Dictionary(Of String, String) From
+    Dim mapPartsInventory As New Dictionary(Of String, String) From
          {{"PART|| ", "PartsNumber"} _
         , {"DESC|| ", "PartDescription"} _
         , {"BIN|| ", "Bin1"} _
@@ -53,8 +68,29 @@ Public Class RunCommand
         , {"MIN|| ", "MinQuantity"} _
         , {"PREVYRSALES|| ", "Comments"}}
 
-    Dim tagsSOPartHist As New Dictionary(Of String, String) From
+    Dim mapSOHeaderHist As New Dictionary(Of String, String) From
+    {{"RONUMBER|| ", "SONumber"} _
+        , {"NAD|| ", "CustomerNumber"} _
+        , {"VIN|| ", "VIN"} _
+        , {"OPENED|| ", "DateIn"} _
+        , {"MILEAGE|| ", "OdometerIn"} _
+        , {"MILEAGEOUT||", "OdometerOut"} _
+        , {"FINALAMT1|| ", "CustomerTotal"} _
+        , {"DEDUCTAMT1|| ", "SubbletTotal"} _
+        , {"NAME|| ", "CustomerLastName"} _
+        , {"NOTE|| ", "Comments"} _
+        , {"DRIVER-NUM|| ", "OriginalCustomerNumber"}}
+
+    Dim mapSOLabourHist As New Dictionary(Of String, String) From
+     {{"RO-NUMBER|| ", "SONumber"} _
+        , {"LINE-NUMBER|| ", "RequestLine"} _
+        , {"DLROPCODE01|| ", "OpCode"} _
+        , {"CONCERN-1|| ", "Cause"} _
+        , {"CONCERN-2|| ", "Complaint"}}
+
+    Dim mapSOPartHist As New Dictionary(Of String, String) From
            {{"Part", "PartNumber"} _
+           , {"Name", "OriginalSONumber"} _
         , {"Description", "PartDescription"} _
         , {"Qty", "QuantitySold"} _
         , {"Cost", "CostPrice"} _
@@ -64,7 +100,7 @@ Public Class RunCommand
         , {"Slsp", "CSR"} _
         , {"PayType", "PayType"}}
 
-    Dim tagsPartsInvoice As New Dictionary(Of String, String) From
+    Dim mapPartsInvoice As New Dictionary(Of String, String) From
                 {{"NAD#", "CustomerNumber"} _
                 , {"Name", "CustomerLastName"} _
                 , {"Part", "PartNumber"} _
@@ -77,28 +113,13 @@ Public Class RunCommand
                 , {"PayType", "PayType"} _
                 , {"InvoicedDate", "DateOpened"}}
 
-    Dim tagsSOHeaderHist As New Dictionary(Of String, String) From
-    {{"RONUMBER|| ", "SONumber"} _
-        , {"NAD|| ", "CustomerNumber"} _
-        , {"VIN|| ", "VIN"} _
-        , {"OPENED|| ", "DateIn"} _
-        , {"MILEAGE|| ", "OdometerIn"} _
-        , {"MILEAGEOUT||", "OdometerOut"} _
-        , {"FINALAMT1|| ", "CustomerTotal"} _
-        , {"DEDUCTAMT1|| ", "SubbletTotal"} _
-        , {"NAME|| ", "CustomerLastName"} _
-        , {"NOTE|| ", "Comments"}}
 
 
 
-    Dim tagsSOLabourHist As New Dictionary(Of String, String) From
-     {{"RO-NUMBER|| ", "SONumber"} _
-        , {"LINE-NUMBER|| ", "RequestLine"} _
-        , {"DLROPCODE01|| ", "OpCode"} _
-        , {"CONCERN-1|| ", "Cause"} _
-        , {"CONCERN-2|| ", "Complaint"}}
 
-    Dim tagsVehicleInventory As New Dictionary(Of String, String) From
+
+
+    Dim mapVehicleInventory As New Dictionary(Of String, String) From
                 {{"VIN|| ", "VIN"} _
                  , {"STOCKNO|| ", "StockNumber"} _
                  , {"MAKE|| ", "Make"} _
@@ -121,7 +142,7 @@ Public Class RunCommand
                  , {"SOLD-TO||", "Owner"} _
                  , {"INT-PRICE||", "InternetPrice"}}
 
-    Dim tagsVehicles As New Dictionary(Of String, String) From
+    Dim mapVehicles As New Dictionary(Of String, String) From
                   {{"VIN|| ", "VIN"} _
                  , {"NEWUSEDGLAG|| ", "Status"} _
                  , {"STOCKNO|| ", "StockNumber"} _
@@ -134,9 +155,10 @@ Public Class RunCommand
                  , {"COLORCODE|| ", "ExteriorColor"} _
                  , {"LASTSVCDATE|| ", "LastServiceDate"} _
                  , {"ODOMETERDEL||", "Odometer"} _
-                 , {"PREV-OWNER||", "OriginalOwner"} _
+                 , {"PREV-OWNER||", "Owner"} _
                  , {"ENGINE||", "Engine"} _
-                 , {"BODYTYPE||", "Body"}}
+                 , {"BODYTYPE||", "Body"} _
+                  , {"LASTDRIVER#||", "OriginalOwner"}}
 
 
 
@@ -145,54 +167,385 @@ Public Class RunCommand
     Dim _connectionString = "Data Source=localhost;Initial Catalog=DataWorldBlank;ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
 
     Private Sub ConnectionStringUpdater(dw As String)
-        _connectionString = "Data Source=localhost;Initial Catalog=" & dw & ";ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
-
+        If Not dw = "" Then
+            _connectionString = "Data Source=localhost;Initial Catalog=" & dw & ";ENCRYPT=no;Trusted_Connection=true;User Id=pbsuser; Password=pbs8805;"
+        End If
     End Sub
+
+
+
 
     Public Sub New(mainWindowViewModel As MainWindowViewModel)
         _mainWindowViewModel = mainWindowViewModel
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     End Sub
 
-    Private Sub LoadData(dt As DataTable, connect_string As String, tableName As String, mapping As Dictionary(Of String, String))
+
+
+    Public Overrides Async Function ExecuteAsync(paramter As Object) As Task
+        _customers = _mainWindowViewModel.Customers
+        _partsinventory = _mainWindowViewModel.PartsInventory
+        _partsinvoice = _mainWindowViewModel.PartsInvoice
+        _soheaderhist = _mainWindowViewModel.SOHeaderHist
+        _solabourhist = _mainWindowViewModel.SOLabourHist
+        _vehicleinventory = _mainWindowViewModel.VehicleInventory
+        _vehicles = _mainWindowViewModel.Vehicles
+        _customerscsv = _mainWindowViewModel.CustomersCSV
+        _dataWorld = _mainWindowViewModel.DataWorld
+        ConnectionStringUpdater(_dataWorld)
+
+
+
+        'TODO add in addtional customers and supplement with .txt pulls
+
+        _mainWindowViewModel.Status = "Parsing and Cleaning Customers from Customer History"
+
+
+
+        Dim CustHistCustomers As DataTable
+        Await Task.Run(Sub() CustHistCustomers = ConvertCSVtoDataTable(_customerscsv))
+        _mainWindowViewModel.Status = "Cleaning Customers from Customer History"
+        Await Task.Run(Sub()
+
+                           Dim colsCustHist As DataColumn() = New DataColumn(CustHistCustomers.Columns.Count - 1) {}
+                           CustHistCustomers.Columns.CopyTo(colsCustHist, 0)
+                           For Each col In colsCustHist
+                               If Not mapCustomersfromHist.ContainsKey(col.ColumnName) Then
+                                   CustHistCustomers.Columns.Remove(col)
+                               Else
+                                   CustHistCustomers.Columns(col.ColumnName).ColumnName = mapCustomersfromHist(col.ColumnName)
+                               End If
+                           Next
+
+                           CustHistCustomers.Select("IsBusiness = 'Y'").ToList().ForEach(Sub(row) row("IsBusiness") = "B")
+
+                       End Sub
+                           )
+
+        Console.WriteLine("CustomersfromHistoryHaveBeenCleaned")
+
+        'Use Driver's Number
+        CustHistCustomers.AsEnumerable.ToList.ForEach(Sub(row) If row("CustomerNumber") = "" AndAlso row("OriginalCustomerNumber") <> "" Then row("CustomerNumber") = row("OriginalCustomerNumber") & "DN")
+        '
+
+
+
+        Dim CustomerCleaned As String
+        _mainWindowViewModel.Status = "Parsing Customers"
+        Await Task.Run(Sub() CustomerCleaned = FileCleaner(_customers))
+
+
+
+
+        Dim dt As DataTable = DFWriter(mapCustomers, CustomerCleaned)
+        CustHistCustomers.Merge(dt, False, MissingSchemaAction.Add)
+        CustHistCustomers = CustHistCustomers.AsEnumerable.GroupBy(Function(r) r("CustomerNumber")).Select(Function(g) g.OrderByDescending(Function(y) y("OriginalCustomerNumber").ToString).FirstOrDefault).CopyToDataTable
+
+
+
+
+
+        'Parse out names
+        CustHistCustomers.Columns.Add("FirstName")
+        CustHistCustomers.Columns.Add("MiddleName")
+        Dim ToBeFixedLastNameRows As List(Of DataRow) = CustHistCustomers.AsEnumerable.Where(Function(x) x.Field(Of String)("LastName").Split(",").Length = 2 _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LLC") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" INC") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LL") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LP") _
+                                                                      And Not x.Field(Of String)("LastName").Contains(" LTD")
+                                                                      ).ToList
+        For Each row In ToBeFixedLastNameRows
+            row("FirstName") = row("LastName").Split(",")(1).Substring(1)
+            row("LastName") = row("LastName").Split(",")(0)
+            If row("FirstName").Split(" ").Length = 2 Then
+                row("MiddleName") = row("FirstName").Split(" ")(1)
+                Dim newFirst As String = row("FirstName").Split(" ")(0)
+                row("FirstName") = newFirst
+            End If
+        Next
+        '
+
+
+        _mainWindowViewModel.Status = "Loading Customers"
+
+        Await Task.Run(Sub() LoadData(CustHistCustomers, _connectionString, "Customers"))
+
+
+        Dim WritingARCustomers As DataTable = CustHistCustomers.AsEnumerable.Where(Function(x) Not IsDBNull(x("Memo")) AndAlso x("Memo") = "1").CopyToDataTable
+        WritingARCustomers.Columns("CustomerNumber").ColumnName = "ARCustomerNumber"
+        Await Task.Run(Sub() LoadData(WritingARCustomers, _connectionString, "ARCustomers"))
+
+        Dim WritingAPVendors As DataTable = CustHistCustomers.AsEnumerable.Where(Function(x) Not IsDBNull(x("CriticalMemo")) AndAlso x("CriticalMemo") = "Y").CopyToDataTable
+        WritingARCustomers.Columns("CustomerNumber").ColumnName = "APVendorNumber"
+        Await Task.Run(Sub() LoadData(WritingAPVendors, _connectionString, "APVendors"))
+
+
+
+
+
+
+
+        'Dim maps As New Dictionary(Of String, String) From
+        '    {{"CustomerNumber", "ARCustomerNumber"} _
+        '    , {"CustomerNumber", "ARCustomerNumber"} _}
+        'For Each col In WritingARCustomers.Columns
+        '    If col.ToString = "CustomerNumber" Then
+        '        WritingARCustomers.Columns(col.ToString).ColumnName = "ARCustomerNumber"
+        '    ElseIf col.ToString = "CustomerNumber" Then
+        '        WritingARCustomers.Columns(col.ToString).ColumnName = "ARCustomerNumber"
+        '    End If
+        'Next
+
+
+
+        Console.WriteLine("CustomersHistDone!")
+
+
+        'PartsInventory
+        Dim PartsCleaned As String
+        Await Task.Run(Sub() PartsCleaned = FileCleaner(_partsinventory))
+        _mainWindowViewModel.Status = "Parsing Parts Inventory"
+        Dim writingParts As DataTable = DFWriter(mapPartsInventory, PartsCleaned)
+        _mainWindowViewModel.Status = "Loading Parts Inventory"
+        Await Task.Run(Sub() LoadData(writingParts, _connectionString, "PartsInventory"))
+
+
+
+        'VehicleInventory
+        Dim VehicleInventoryCleaned As String
+        _mainWindowViewModel.Status = "Parsing VehicleInventory"
+        Await Task.Run(Sub() VehicleInventoryCleaned = FileCleaner(_vehicleinventory))
+        Dim writingeVehicleInventory As DataTable = DFWriter(mapVehicleInventory, VehicleInventoryCleaned)
+        _mainWindowViewModel.Status = "Loading VehicleInventory"
+        Await Task.Run(Sub() LoadData(writingeVehicleInventory, _connectionString, "VehicleInventory"))
+
+
+
+        'Vehicles
+        Dim VehiclesCleaned As String
+        _mainWindowViewModel.Status = "Parsing Vehicles"
+        Await Task.Run(Sub() VehiclesCleaned = FileCleaner(_vehicles))
+        Dim WritingVehicles As DataTable = DFWriter(mapVehicles, VehiclesCleaned)
+
+        WritingVehicles.AsEnumerable.ToList.ForEach(Sub(row) If row("OriginalOwner").ToString.Trim <> "" Then row("Owner") = row("OriginalOwner") & "DN")
+
+
+        _mainWindowViewModel.Status = "Loading Vehicles"
+        Await Task.Run(Sub() LoadData(WritingVehicles, _connectionString, "Vehicles"))
+
+
+
+
+        'SOHeaderHist
+        Dim SOHeaderCleaned As String
+        _mainWindowViewModel.Status = "Parsing SOHeaderHist"
+        Await Task.Run(Sub() SOHeaderCleaned = FileCleaner(_soheaderhist))
+        Dim WritingSOHeaderHist As DataTable = DFWriter(mapSOHeaderHist, SOHeaderCleaned)
+
+        WritingSOHeaderHist.AsEnumerable.ToList.ForEach(Sub(row) If row("CustomerNumber").ToString.Trim = "" AndAlso row("OriginalCustomerNumber").ToString.Trim <> "" Then row("CustomerNumber") = row("OriginalCustomerNumber") & "DN")
+
+
+
+
+
+        'SOPartInvoice 'TODO
+        Dim WritingPartsInvoice As DataTable
+        _mainWindowViewModel.Status = "Parsing PartsInvoice"
+        Await Task.Run(Sub() WritingPartsInvoice = ConvertCSVtoDataTable(_partsinvoice))
+        Dim WritingSOPartHist As DataTable = New DataTable()
+        Dim partsInvoiceDWRaw As DataTable = New DataTable()
+        Dim qry = From dr As DataRow In WritingPartsInvoice.AsEnumerable()
+                  Where Not dr.Field(Of String)("RO#").Equals("")
+                  Select dr
+        WritingSOPartHist = qry.CopyToDataTable()
+        'Dim SOPartHistDWRaw2 As DataTable = WritingSOPartHist.Copy()
+
+        Dim cols As DataColumn() = New DataColumn(WritingSOPartHist.Columns.Count - 1) {}
+
+        WritingSOPartHist.Columns.CopyTo(cols, 0)
+        For Each col In cols
+            If Not mapSOPartHist.Keys.Contains(col.ToString()) Then
+                WritingSOPartHist.Columns.Remove(col)
+            Else
+                WritingSOPartHist.Columns(col.ToString()).ColumnName = mapSOPartHist(col.ToString())
+            End If
+        Next
+        Dim qry3 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
+                   Where Not dr2.Field(Of String)("Invoice#").Equals("")
+                   Select dr2
+        partsInvoiceDWRaw = qry3.CopyToDataTable()
+        'Dim partsInvoiceDWRaw2 As DataTable = partsInvoiceDWRaw.Copy()
+        Dim cols2 As DataColumn() = New DataColumn(partsInvoiceDWRaw.Columns.Count - 1) {}
+        partsInvoiceDWRaw.Columns.CopyTo(cols2, 0)
+        For Each col In cols2
+            If Not mapPartsInvoice.Keys.Contains(col.ToString()) Then
+                partsInvoiceDWRaw.Columns.Remove(col)
+            Else
+                partsInvoiceDWRaw.Columns(col.ToString()).ColumnName = mapPartsInvoice(col.ToString())
+            End If
+        Next
+
+
+        'PaytypeSOPartHistBlanking
+        WritingSOPartHist.AsEnumerable.ToList.ForEach(Sub(row) If Not {"C", "W", "I"}.Contains(row("PayType")) Then row("PayType") = "")
+
+
+
+        _mainWindowViewModel.Status = "Loading SOPartHist"
+
+        Await Task.Run(Sub() LoadData(WritingSOPartHist, _connectionString, "SOPartHist"))
+        _mainWindowViewModel.Status = "Loading PartsInvoice"
+        Await Task.Run(Sub() LoadData(partsInvoiceDWRaw, _connectionString, "PartsInvoice"))
+
+
+        Dim SOLabourHistCleaned As String
+        _mainWindowViewModel.Status = "Parsing SOLabourHist"
+        Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
+        Dim WritingSORequestHist As DataTable = DFWriter(mapSOLabourHist, SOLabourHistCleaned)
+
+
+        WritingSORequestHist.Columns.Add("PayType")
+        WritingSORequestHist.Columns.Add("CSR")
+
+
+        'SONumberSOPartHistMissingSOLabourHistInsert
+        Dim MissingSOPartRowsFromSOLabour As DataRow() = WritingSOPartHist.AsEnumerable.Where(Function(x) Not WritingSORequestHist.AsEnumerable.Select(Function(row) row("SONumber").ToString).ToArray.Contains(x("SONumber"))).ToArray
+        For Each row In MissingSOPartRowsFromSOLabour
+            Dim insertRow As DataRow = WritingSORequestHist.NewRow
+            insertRow("SONumber") = row("SONumber")
+            insertRow("CSR") = row("CSR")
+            insertRow("PayType") = row("PayType")
+            insertRow("RequestLine") = row("RequestLine")
+            WritingSORequestHist.Rows.Add(insertRow)
+        Next
+        '
+
+        WritingSOHeaderHist.Columns.Add("CSROpen")
+        WritingSOHeaderHist.Columns.Add("CSRClose")
+        WritingSOHeaderHist.Columns.Add("PayType")
+        WritingSOHeaderHist.Columns.Add("OriginalSONumber")
+
+
+        'SONumber SOPartHist Missing SOHeaderHist Insert
+        Dim rws As DataRow() = WritingSOPartHist.AsEnumerable.Where(Function(x) Not WritingSOHeaderHist.AsEnumerable.Select(Function(row) row("SONumber").ToString).ToArray.Contains(x("SONumber"))).ToArray
+        For Each row In rws
+            Dim insertRow As DataRow = WritingSOHeaderHist.NewRow
+            insertRow("SONumber") = row("SONumber")
+            insertRow("CSROpen") = row("CSR")
+            insertRow("CSRClose") = row("CSR")
+            insertRow("PayType") = row("PayType")
+            insertRow("CustomerLastName") = row("OriginalSONumber")
+            WritingSOHeaderHist.Rows.Add(insertRow)
+        Next
+        '
+        WritingSORequestHist.Columns.Add("OriginalSONumber")
+        WritingSORequestHist.AsEnumerable.ToList.ForEach(Sub(row) row("OriginalSONumber") = row("RequestLine"))
+        'Eliminate Dups first
+
+        'WritingSORequestHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).Select(Function(g) New With {Key .Group = g, Key .count = g.Count()}).AsEnumerable.ToList.ForEach(Sub(row) row.Group.ToList.ForEach(Sub(row2) row2("RequestLine") = row.count))
+        WritingSORequestHist = WritingSORequestHist.AsEnumerable.GroupBy(Function(x) New With {Key .SONumber = x("SONumber"), Key .OpCode = x("OpCode"), Key .OriginalSONumber = x("OriginalSONumber")}).Select(Function(g) g.First).CopyToDataTable
+        WritingSORequestHist.AsEnumerable.GroupBy(Function(x) x("SONumber")).SelectMany(Function(x) x.Select(Function(j, i) New With {j, Key .rn = i + 1})).AsEnumerable.ToList.ForEach(Sub(r) r.j("RequestLine") = r.rn)
+
+
+        Dim WritingSOLabourHist As DataTable = WritingSORequestHist.DefaultView.ToTable(True, "SONumber", "RequestLine", "OpCode", "OriginalSONumber")
+
+        WritingSORequestHist.AsEnumerable.ToList.ForEach(Sub(row)
+                                                             row("Complaint") = row("Cause") & " " & row("Complaint")
+                                                             row("Cause") = ""
+                                                         End Sub)
+
+        Dim ToAdd = WritingSORequestHist.AsEnumerable.Where(Function(x) Not WritingSOHeaderHist.AsEnumerable.Select(Function(row) row("SONumber")).ToHashSet.Contains(x("SONumber"))).CopyToDataTable
+        ToAdd.DefaultView.ToTable(True, "SONumber").AsEnumerable.ToList.ForEach(Sub(row)
+                                                                                    Dim newRow = WritingSOHeaderHist.NewRow
+                                                                                    newRow("SONumber") = row("SONumber")
+                                                                                    WritingSOHeaderHist.Rows.Add(newRow)
+                                                                                End Sub)
+        'WritingSOPartHist.Columns.Add("OriginalSONumber")
+        WritingSOPartHist.AsEnumerable.ToList.ForEach(Sub(row) row("OriginalSONumber") = row("RequestLine"))
+
+        Dim joiner = From t1 In WritingSOPartHist.AsEnumerable
+                     Join t2 In WritingSORequestHist.AsEnumerable
+                         On t1.Field(Of String)("SONumber") Equals t2.Field(Of String)("SONumber") _
+                         And t1.Field(Of String)("OriginalSONumber") Equals t2.Field(Of String)("OriginalSONumber")
+                     Select New With {t1, t2}
+        joiner = joiner.ToList
+        joiner.ToList.ForEach(Sub(rowSet) rowSet.t1("RequestLine") = rowSet.t2("RequestLine"))
+
+
+
+
+        _mainWindowViewModel.Status = "Loading SORequestHist"
+        Await Task.Run(Sub() LoadData(WritingSORequestHist, _connectionString, "SORequestHist"))
+        _mainWindowViewModel.Status = "Loading SOLabourHist"
+        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SOLabourHist"))
+        _mainWindowViewModel.Status = "Loading SOHeaderHist"
+        Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
+
+        _mainWindowViewModel.Status = "Sending CleanUp Queries"
+
+        Await SendCommand(Queries.Query, _connectionString)
+
+
+        _mainWindowViewModel.Status = "Conversion Finished!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        'Console.WriteLine("done!")
+
+
+
+
+
+
+    End Function
+
+    Private Sub LoadData(dt As DataTable, connect_string As String, tableName As String)
         Dim bads As String() = {}
 
         Using sourceConnection = New SqlConnection(connect_string)
             Try
                 sourceConnection.Open()
             Catch ex As Exception
-
+                Throw ex
             End Try
+            Dim com As New SqlCommand("select b.name from sys.objects a 
+                                        inner join sys.columns b on a.object_id = b.object_id
+                                        where a.name = '" & tableName & "'", sourceConnection)
+            Dim headerReader = com.ExecuteReader
+            Dim Headers As New Dictionary(Of String, String)
+            If headerReader.HasRows Then
+                While headerReader.Read()
+                    Headers(headerReader.GetString(0)) = ""
+                End While
+            End If
+            headerReader.Close()
 
             Using bulkCopy As System.Data.SqlClient.SqlBulkCopy = New SqlBulkCopy(sourceConnection)
                 bulkCopy.DestinationTableName = "dbo." & tableName
-                For Each map In mapping
-                    Dim destination As String
-                    If bads.Contains(map.Value.ToLower()) Then
-                        destination = "[" & map.Value & "]"
-                    Else
-                        destination = map.Value
+                For Each colName In dt.Columns.Cast(Of DataColumn).Select(Function(x) x.ColumnName).ToArray
+                    If Headers.ContainsKey(colName) Then
+                        bulkCopy.ColumnMappings.Add(colName, colName)
                     End If
-                    bulkCopy.ColumnMappings.Add(map.Value, destination)
                 Next
                 Try
                     bulkCopy.WriteToServer(dt)
                     Console.WriteLine("fish")
                 Catch ex As Exception
-
+                    Throw ex
                 End Try
 
 
@@ -352,138 +705,5 @@ Public Class RunCommand
     End Function
 
 
-    Public Overrides Async Function ExecuteAsync(paramter As Object) As Task
-        _customers = _mainWindowViewModel.Customers
-        _partsinventory = _mainWindowViewModel.PartsInventory
-        _partsinvoice = _mainWindowViewModel.PartsInvoice
-        _soheaderhist = _mainWindowViewModel.SOHeaderHist
-        _solabourhist = _mainWindowViewModel.SOLabourHist
-        _vehicleinventory = _mainWindowViewModel.VehicleInventory
-        _vehicles = _mainWindowViewModel.Vehicles
-        _customerscsv = _mainWindowViewModel.CustomersCSV
-        _dataWorld = _mainWindowViewModel.DataWorld
-        ConnectionStringUpdater(_dataWorld)
 
-        Dim PartsCleaned As String
-        Await Task.Run(Sub() PartsCleaned = FileCleaner(_partsinventory))
-        _mainWindowViewModel.Status = "Parsing Parts Inventory"
-        Dim writingParts As DataTable = DFWriter(tagsPartsInventory, PartsCleaned)
-        _mainWindowViewModel.Status = "Loading Parts Inventory"
-        Await Task.Run(Sub() LoadData(writingParts, _connectionString, "PartsInventory", tagsPartsInventory))
-
-        Dim CustomerCleaned As String
-        _mainWindowViewModel.Status = "Parsing Customers"
-        Await Task.Run(Sub() CustomerCleaned = FileCleaner(_customers))
-        Dim dt As DataTable = DFWriter(tagsCustomers, CustomerCleaned)
-        _mainWindowViewModel.Status = "Loading Customers"
-        Await Task.Run(Sub() LoadData(dt, _connectionString, "Customers", tagsCustomers))
-
-        Dim VehicleInventoryCleaned As String
-        _mainWindowViewModel.Status = "Parsing VehicleInventory"
-        Await Task.Run(Sub() VehicleInventoryCleaned = FileCleaner(_vehicleinventory))
-        Dim writingeVehicleInventory As DataTable = DFWriter(tagsVehicleInventory, VehicleInventoryCleaned)
-        _mainWindowViewModel.Status = "Loading VehicleInventory"
-        Await Task.Run(Sub() LoadData(writingeVehicleInventory, _connectionString, "VehicleInventory", tagsVehicleInventory))
-
-        Dim VehiclesCleaned As String
-        _mainWindowViewModel.Status = "Parsing Vehicles"
-        Await Task.Run(Sub() VehiclesCleaned = FileCleaner(_vehicles))
-        Dim WritingVehicles As DataTable = DFWriter(tagsVehicles, VehiclesCleaned)
-        _mainWindowViewModel.Status = "Loading Vehicles"
-        Await Task.Run(Sub() LoadData(WritingVehicles, _connectionString, "Vehicles", tagsVehicles))
-
-        Dim SOHeaderCleaned As String
-        _mainWindowViewModel.Status = "Parsing SOHeaderHist"
-        Await Task.Run(Sub() SOHeaderCleaned = FileCleaner(_soheaderhist))
-        Dim WritingSOHeaderHist As DataTable = DFWriter(tagsSOHeaderHist, SOHeaderCleaned)
-        _mainWindowViewModel.Status = "Loading SOHeaderHist"
-        Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist", tagsSOHeaderHist))
-
-
-
-        'SOPartInvoice 'TODO
-        Dim WritingPartsInvoice As DataTable
-        _mainWindowViewModel.Status = "Parsing PartsInvoice"
-        Await Task.Run(Sub() WritingPartsInvoice = ConvertCSVtoDataTable(_partsinvoice))
-        Dim SOPartHistDWRaw As DataTable = New DataTable()
-        Dim partsInvoiceDWRaw As DataTable = New DataTable()
-        Dim qry = From dr As DataRow In WritingPartsInvoice.AsEnumerable()
-                  Where Not dr.Field(Of String)("RO#").Equals("")
-                  Select dr
-        SOPartHistDWRaw = qry.CopyToDataTable()
-        'Dim SOPartHistDWRaw2 As DataTable = SOPartHistDWRaw.Copy()
-
-        Dim cols As DataColumn() = New DataColumn(SOPartHistDWRaw.Columns.Count - 1) {}
-
-        SOPartHistDWRaw.Columns.CopyTo(cols, 0)
-        For Each col In cols
-            If Not tagsSOPartHist.Keys.Contains(col.ToString()) Then
-                SOPartHistDWRaw.Columns.Remove(col)
-            Else
-                SOPartHistDWRaw.Columns(col.ToString()).ColumnName = tagsSOPartHist(col.ToString())
-            End If
-        Next
-        Dim qry2 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
-                   Where Not dr2.Field(Of String)("Invoice#").Equals("")
-                   Select dr2
-        partsInvoiceDWRaw = qry2.CopyToDataTable()
-        'Dim partsInvoiceDWRaw2 As DataTable = partsInvoiceDWRaw.Copy()
-        Dim cols2 As DataColumn() = New DataColumn(partsInvoiceDWRaw.Columns.Count - 1) {}
-        partsInvoiceDWRaw.Columns.CopyTo(cols2, 0)
-        For Each col In cols2
-            If Not tagsPartsInvoice.Keys.Contains(col.ToString()) Then
-                partsInvoiceDWRaw.Columns.Remove(col)
-            Else
-                partsInvoiceDWRaw.Columns(col.ToString()).ColumnName = tagsPartsInvoice(col.ToString())
-            End If
-        Next
-
-
-
-
-        _mainWindowViewModel.Status = "Loading SOPartHist"
-
-        Await Task.Run(Sub() LoadData(SOPartHistDWRaw, _connectionString, "SOPartHist", tagsSOPartHist))
-        _mainWindowViewModel.Status = "Loading PartsInvoice"
-        Await Task.Run(Sub() LoadData(partsInvoiceDWRaw, _connectionString, "PartsInvoice", tagsPartsInvoice))
-
-
-        Dim SOLabourHistCleaned As String
-        _mainWindowViewModel.Status = "Parsing SOLabourHist"
-        Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
-        Dim WritingSOLabourHist As DataTable = DFWriter(tagsSOLabourHist, SOLabourHistCleaned)
-        _mainWindowViewModel.Status = "Loading SOLabourHist"
-        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SORequestHist", tagsSOLabourHist))
-
-        _mainWindowViewModel.Status = "Sending CleanUp Queries"
-
-        Await SendCommand(Queries.Query, _connectionString)
-
-
-        _mainWindowViewModel.Status = "Conversion Finished!"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        'Console.WriteLine("done!")
-
-
-
-
-
-
-    End Function
 End Class
