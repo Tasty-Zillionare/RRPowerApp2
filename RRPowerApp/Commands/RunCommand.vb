@@ -8,7 +8,8 @@ Public Class RunCommand
     Private _partsinventory As String
     Private _partsinvoice As String
     Private _soheaderhist As String
-    Private _solabourhist As String
+    Private _sorequesthist As String
+    Private _soLabourHistCSV As String
     Private _vehicleinventory As String
     Private _vehicles As String
     Private _customerscsv As String
@@ -81,7 +82,7 @@ Public Class RunCommand
         , {"NOTE|| ", "Comments"} _
         , {"DRIVER-NUM|| ", "OriginalCustomerNumber"}}
 
-    Dim mapSOLabourHist As New Dictionary(Of String, String) From
+    Dim mapSORequestHist As New Dictionary(Of String, String) From
      {{"RO-NUMBER|| ", "SONumber"} _
         , {"LINE-NUMBER|| ", "RequestLine"} _
         , {"DLROPCODE01|| ", "OpCode"} _
@@ -144,7 +145,7 @@ Public Class RunCommand
 
     Dim mapVehicles As New Dictionary(Of String, String) From
                   {{"VIN|| ", "VIN"} _
-                 , {"NEWUSEDGLAG|| ", "Status"} _
+                 , {"NEWUSEDFLAG|| ", "Status"} _
                  , {"STOCKNO|| ", "StockNumber"} _
                  , {"MAKE|| ", "Make"} _
                  , {"MODEL|| ", "Model"} _
@@ -159,6 +160,21 @@ Public Class RunCommand
                  , {"ENGINE||", "Engine"} _
                  , {"BODYTYPE||", "Body"} _
                   , {"LASTDRIVER#||", "OriginalOwner"}}
+
+    Dim SOLabourHistCSVMap As New Dictionary(Of String, String) From {
+        {"RO#", "SONumber"},
+        {"Technician", "Tech"},
+        {"Line", "RequestLine"},
+        {"InvoicePrefix", "PayType"},
+        {"Operation", "OpCode"},
+        {"Hours", "ActualHours"},
+        {"Rate", "LabourPrice"},
+        {"Amount", "LabourTotal"},
+        {"Cost", "LabourCost"},
+        {"Advisor", "CSR"},
+        {"SequenceLine", "SequenceLine"}
+        }
+
 
 
 
@@ -186,11 +202,13 @@ Public Class RunCommand
         _partsinventory = _mainWindowViewModel.PartsInventory
         _partsinvoice = _mainWindowViewModel.PartsInvoice
         _soheaderhist = _mainWindowViewModel.SOHeaderHist
-        _solabourhist = _mainWindowViewModel.SOLabourHist
+        _sorequesthist = _mainWindowViewModel.SORequestHist
+        _soLabourHistCSV = _mainWindowViewModel.SOLabourHistCSV
         _vehicleinventory = _mainWindowViewModel.VehicleInventory
         _vehicles = _mainWindowViewModel.Vehicles
         _customerscsv = _mainWindowViewModel.CustomersCSV
         _dataWorld = _mainWindowViewModel.DataWorld
+        _dataWorld = "DataWorldTest"
         ConnectionStringUpdater(_dataWorld)
 
 
@@ -255,7 +273,7 @@ Public Class RunCommand
                                                                       And Not x.Field(Of String)("LastName").Contains(" LTD")
                                                                       ).ToList
         For Each row In ToBeFixedLastNameRows
-            row("FirstName") = row("LastName").Split(",")(1).Substring(1)
+            row("FirstName") = row("LastName").Split(",")(1).ToString.Trim
             row("LastName") = row("LastName").Split(",")(0)
             If row("FirstName").Split(" ").Length = 2 Then
                 row("MiddleName") = row("FirstName").Split(" ")(1)
@@ -276,7 +294,7 @@ Public Class RunCommand
         Await Task.Run(Sub() LoadData(WritingARCustomers, _connectionString, "ARCustomers"))
 
         Dim WritingAPVendors As DataTable = CustHistCustomers.AsEnumerable.Where(Function(x) Not IsDBNull(x("CriticalMemo")) AndAlso x("CriticalMemo") = "Y").CopyToDataTable
-        WritingARCustomers.Columns("CustomerNumber").ColumnName = "APVendorNumber"
+        WritingAPVendors.Columns("CustomerNumber").ColumnName = "APVendorNumber"
         Await Task.Run(Sub() LoadData(WritingAPVendors, _connectionString, "APVendors"))
 
 
@@ -316,6 +334,11 @@ Public Class RunCommand
         _mainWindowViewModel.Status = "Parsing VehicleInventory"
         Await Task.Run(Sub() VehicleInventoryCleaned = FileCleaner(_vehicleinventory))
         Dim writingeVehicleInventory As DataTable = DFWriter(mapVehicleInventory, VehicleInventoryCleaned)
+        writingeVehicleInventory.AsEnumerable.ToList.ForEach(Sub(x)
+                                                                 If x("Owner").ToString = "" Then
+                                                                     x("Owner") = "1"
+                                                                 End If
+                                                             End Sub)
         _mainWindowViewModel.Status = "Loading VehicleInventory"
         Await Task.Run(Sub() LoadData(writingeVehicleInventory, _connectionString, "VehicleInventory"))
 
@@ -391,17 +414,53 @@ Public Class RunCommand
 
 
 
-        _mainWindowViewModel.Status = "Loading SOPartHist"
 
-        Await Task.Run(Sub() LoadData(WritingSOPartHist, _connectionString, "SOPartHist"))
         _mainWindowViewModel.Status = "Loading PartsInvoice"
         Await Task.Run(Sub() LoadData(partsInvoiceDWRaw, _connectionString, "PartsInvoice"))
 
 
-        Dim SOLabourHistCleaned As String
-        _mainWindowViewModel.Status = "Parsing SOLabourHist"
-        Await Task.Run(Sub() SOLabourHistCleaned = FileCleaner(_solabourhist))
-        Dim WritingSORequestHist As DataTable = DFWriter(mapSOLabourHist, SOLabourHistCleaned)
+
+        'SOLabourHist
+
+        Dim SORequestHistCleaned As String
+
+
+        Dim SOLabourHistCSVWriting As DataTable
+        Await Task.Run(Sub() SOLabourHistCSVWriting = ConvertCSVtoDataTable(_soLabourHistCSV))
+        SOLabourHistCSVWriting.Columns.Add(New DataColumn("SequenceLine", GetType(String)))
+
+        SOLabourHistCSVWriting.AsEnumerable.ToList.ForEach(Sub(x)
+                                                               If Not x("InvoicePrefix").ToString = "W" And Not x("InvoicePrefix").ToString = "C" Then x("InvoicePrefix") = "C"
+                                                               If x("Line").ToString.Contains("-") Then
+                                                                   x("SequenceLine") = (Integer.Parse(x("Line").ToString.Split("-")(1).Trim) + 1).ToString
+                                                                   x("Line") = x("Line").ToString.Split("-")(0).Trim
+                                                               Else
+                                                                   x("SequenceLine") = "1"
+                                                               End If
+
+                                                           End Sub)
+
+        'Renaming Columns to match destination column names
+        SOLabourHistCSVWriting.Columns.Remove("PayType")
+        Dim SOLabourCols(SOLabourHistCSVWriting.Columns.Count - 1) As DataColumn
+        SOLabourHistCSVWriting.Columns.CopyTo(SOLabourCols, 0)
+        For Each keyvp In SOLabourHistCSVMap
+            If SOLabourHistCSVMap.ContainsKey(keyvp.Key) Then
+                SOLabourHistCSVWriting.Columns(keyvp.Key).ColumnName = SOLabourHistCSVMap(keyvp.Key)
+            End If
+        Next
+
+
+        'End Renaming Columns To match destination column names
+
+        SOLabourHistCSVWriting = SOLabourHistCSVWriting.AsEnumerable _
+        .GroupBy(Function(x) New With {Key .SONumber = x("SONumber"), Key .RequestLine = x("RequestLine"), Key .OpCode = x("OpCode")}) _
+        .Select(Function(group) group.OrderBy(Function(row) row("LabourCost")).FirstOrDefault).CopyToDataTable
+
+
+
+        Await Task.Run(Sub() SORequestHistCleaned = FileCleaner(_sorequesthist))
+        Dim WritingSORequestHist As DataTable = DFWriter(mapSORequestHist, SORequestHistCleaned)
 
 
         WritingSORequestHist.Columns.Add("PayType")
@@ -471,13 +530,28 @@ Public Class RunCommand
         joiner = joiner.ToList
         joiner.ToList.ForEach(Sub(rowSet) rowSet.t1("RequestLine") = rowSet.t2("RequestLine"))
 
+        SOLabourHistCSVWriting.Columns.Add(New DataColumn("OriginalSONumber", GetType(String)))
+        SOLabourHistCSVWriting.AsEnumerable.ToList.ForEach(Sub(row) row("OriginalSONumber") = row("RequestLine"))
+
+        Dim joiner2 = From t1 In SOLabourHistCSVWriting.AsEnumerable
+                      Join t2 In WritingSORequestHist.AsEnumerable
+                         On t1.Field(Of String)("SONumber") Equals t2.Field(Of String)("SONumber") _
+                         And t1.Field(Of String)("OriginalSONumber") Equals t2.Field(Of String)("OriginalSONumber")
+                      Select New With {t1, t2}
+        joiner2 = joiner2.ToList
+        joiner2.ToList.ForEach(Sub(rowSet) rowSet.t1("RequestLine") = rowSet.t2("RequestLine"))
 
 
+        _mainWindowViewModel.Status = "Loading SOPartHist"
+
+        Await Task.Run(Sub() LoadData(WritingSOPartHist, _connectionString, "SOPartHist"))
+
+        _mainWindowViewModel.Status = "Loading SOLabourHist"
+        Await Task.Run(Sub() LoadData(SOLabourHistCSVWriting, _connectionString, "SOLabourHist"))
 
         _mainWindowViewModel.Status = "Loading SORequestHist"
         Await Task.Run(Sub() LoadData(WritingSORequestHist, _connectionString, "SORequestHist"))
-        _mainWindowViewModel.Status = "Loading SOLabourHist"
-        Await Task.Run(Sub() LoadData(WritingSOLabourHist, _connectionString, "SOLabourHist"))
+
         _mainWindowViewModel.Status = "Loading SOHeaderHist"
         Await Task.Run(Sub() LoadData(WritingSOHeaderHist, _connectionString, "SOHeaderHist"))
 
@@ -504,7 +578,7 @@ Public Class RunCommand
 
 
 
-        'Console.WriteLine("done!")
+        Console.WriteLine("done!")
 
 
 

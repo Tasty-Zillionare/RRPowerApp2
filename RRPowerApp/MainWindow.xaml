@@ -23,6 +23,7 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -43,21 +44,24 @@
         <Label Margin="5 5 5 5" Content="Select SOHeaderHist" Grid.Row="5" Grid.Column="0"/>
         <TextBox Margin="5 5 5 5" Grid.Row="5" Grid.Column="1" Text="{Binding SOHeaderHist , UpdateSourceTrigger=PropertyChanged}" />
         <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="5" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SOHeaderHist"/>
-        <Label Margin="5 5 5 5" Content="Select SOLabourHist" Grid.Row="6" Grid.Column="0"/>
-        <TextBox Margin="5 5 5 5" Grid.Row="6" Grid.Column="1" Text="{Binding SOLabourHist , UpdateSourceTrigger=PropertyChanged}" />
-        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="6" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SOLabourHist"/>
-        <Label Margin="5 5 5 5" Content="Select VehicleInventory" Grid.Row="7" Grid.Column="0"/>
-        <TextBox Margin="5 5 5 5" Grid.Row="7" Grid.Column="1" Text="{Binding VehicleInventory , UpdateSourceTrigger=PropertyChanged}" />
-        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="7" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="VehicleInventory"/>
-        <Label Margin="5 5 5 5" Content="Select Vehicles" Grid.Row="8" Grid.Column="0"/>
-        <TextBox Margin="5 5 5 5" Grid.Row="8" Grid.Column="1" Text="{Binding Vehicles , UpdateSourceTrigger=PropertyChanged}" />
-        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="8" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="Vehicles"/>
-        <Label Margin="5 5 5 5" Content="Select Customer CSV" Grid.Row="9" Grid.Column="0"/>
-        <TextBox Margin="5 5 5 5" Grid.Row="9" Grid.Column="1" Text="{Binding CustomersCSV , UpdateSourceTrigger=PropertyChanged}" />
-        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="9" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="CustomersCSV"/>
-        <Label Margin="5 5 5 5" Content="Enter DataWorld" Grid.Row="10" Grid.Column="0"/>
-        <TextBox Margin="5 5 5 5" Grid.Row="10" Grid.Column="1" Grid.ColumnSpan="1" Text="{Binding DataWorld, UpdateSourceTrigger=PropertyChanged }" />
-        <Button Margin="5 5 5 5" Content="Run" Command="{Binding RunCommand}" Grid.Row="10" Grid.Column="2"/>
-        <TextBox Margin="5 5 5 5" Grid.Row="11" Grid.ColumnSpan="3" Grid.Column="0" MinHeight="120" Text="{Binding Status, UpdateSourceTrigger=PropertyChanged}" />
+        <Label Margin="5 5 5 5" Content="Select SORequestHist" Grid.Row="6" Grid.Column="0"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="6" Grid.Column="1" Text="{Binding SORequestHist , UpdateSourceTrigger=PropertyChanged}" />
+        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="6" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SORequestHist"/>
+        <Label Margin="5 5 5 5" Content="Select SOLabourHistCSV" Grid.Row="7" Grid.Column="0"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="7" Grid.Column="1" Text="{Binding SOLabourHistCSV , UpdateSourceTrigger=PropertyChanged}" />
+        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="7" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SOLabourHistCSV"/>
+        <Label Margin="5 5 5 5" Content="Select VehicleInventory" Grid.Row="8" Grid.Column="0"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="8" Grid.Column="1" Text="{Binding VehicleInventory , UpdateSourceTrigger=PropertyChanged}" />
+        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="8" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="VehicleInventory"/>
+        <Label Margin="5 5 5 5" Content="Select Vehicles" Grid.Row="9" Grid.Column="0"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="9" Grid.Column="1" Text="{Binding Vehicles , UpdateSourceTrigger=PropertyChanged}" />
+        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="9" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="Vehicles"/>
+        <Label Margin="5 5 5 5" Content="Select Customer CSV" Grid.Row="10" Grid.Column="0"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="10" Grid.Column="1" Text="{Binding CustomersCSV , UpdateSourceTrigger=PropertyChanged}" />
+        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="10" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="CustomersCSV"/>
+        <Label Margin="5 5 5 5" Content="Enter DataWorld" Grid.Row="11" Grid.Column="0"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="11" Grid.Column="1" Grid.ColumnSpan="1" Text="{Binding DataWorld, UpdateSourceTrigger=PropertyChanged }" />
+        <Button Margin="5 5 5 5" Content="Run" Command="{Binding RunCommand}" Grid.Row="11" Grid.Column="2"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="12" Grid.ColumnSpan="3" Grid.Column="0" MinHeight="120" Text="{Binding Status, UpdateSourceTrigger=PropertyChanged}" />
     </Grid>
 </Controls:MetroWindow>
