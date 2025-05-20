@@ -3,9 +3,11 @@
 
     Private _customers As String = ""
     Private _partsinventory As String = ""
+    Private _partsinventorycsv As String = ""
     Private _partsinvoice As String = ""
     Private _soheaderhist As String = ""
     Private _solabourhist As String = ""
+    Private _solabourhistcsv As String = ""
     Private _vehicleInventory As String = ""
     Private _vehicles As String = ""
     Private _customerscsv As String = ""
@@ -14,9 +16,11 @@
     Private Enum DataFile
         Customers
         PartsInventory
+        PartsInventoryCSV
         PartsInvoice
         SOHeaderHist
         SOLabourHist
+        SOLabourHistCSV
         VehicleInventory
         Vehicles
         CustomersCSV
@@ -50,6 +54,19 @@
         End Set
     End Property
 
+    Public Property PartsInventoryCSV() As String
+        Get
+            Return _partsinventorycsv
+        End Get
+        Set(ByVal value As String)
+            If _partsinventorycsv <> value Then
+                _partsinventorycsv = value
+                OnPropertyChanged(NameOf(PartsInventoryCSV))
+
+            End If
+        End Set
+    End Property
+
     Public Property PartsInvoice() As String
         Get
             Return _partsinvoice
@@ -70,6 +87,18 @@
             If _soheaderhist <> value Then
                 _soheaderhist = value
                 OnPropertyChanged(NameOf(SOHeaderHist))
+            End If
+        End Set
+    End Property
+
+    Public Property SOLabourHistCSV() As String
+        Get
+            Return _solabourhistcsv
+        End Get
+        Set(ByVal value As String)
+            If _solabourhistcsv <> value Then
+                _solabourhistcsv = value
+                OnPropertyChanged(NameOf(SOLabourHistCSV))
             End If
         End Set
     End Property
@@ -210,6 +239,8 @@
                 Return "Customers.TXT"
             Case DataFile.PartsInventory
                 Return "PartsInventory.TXT"
+            Case DataFile.PartsInventoryCSV
+                Return "PartsInventory.CSV"
             Case DataFile.PartsInvoice
                 Return "PartsInvoice.CSV"
             Case DataFile.SOHeaderHist
@@ -222,6 +253,8 @@
                 Return "Vehicles.TXT"
             Case DataFile.CustomersCSV
                 Return "Customers.CSV"
+            Case DataFile.SOLabourHistCSV
+                Return "SOLabourHist.csv"
         End Select
     End Function
 
