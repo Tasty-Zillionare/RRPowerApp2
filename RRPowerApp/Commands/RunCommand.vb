@@ -393,6 +393,18 @@ Public Class RunCommand
                 WritingSOPartHist.Columns(col.ToString()).ColumnName = mapSOPartHist(col.ToString())
             End If
         Next
+        WritingSOPartHist.Columns.Add(New DataColumn("SequenceLine", GetType(String))
+        WritingSOPartHist.AsEnumerable _
+        .GroupBy(Function(x) New With {Key .SONumber = x("SONumber"), Key .RequestLine = x("RequstLine")}) _
+        .ToList.ForEach(Sub(grp)
+                            Dim RowNumber = 1
+                            For Each elem In grp
+                                elem("SequenceLine") = RowNumber
+                                RowNumber += 1
+                            Next
+                        End Sub)
+
+
         Dim qry3 = From dr2 As DataRow In WritingPartsInvoice.AsEnumerable()
                    Where Not dr2.Field(Of String)("Invoice#").Equals("")
                    Select dr2
