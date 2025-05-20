@@ -6,7 +6,7 @@
     Private _partsinventorycsv As String = ""
     Private _partsinvoice As String = ""
     Private _soheaderhist As String = ""
-    Private _solabourhist As String = ""
+    Private _soRequestHist As String = ""
     Private _solabourhistcsv As String = ""
     Private _vehicleInventory As String = ""
     Private _vehicles As String = ""
@@ -19,7 +19,7 @@
         PartsInventoryCSV
         PartsInvoice
         SOHeaderHist
-        SOLabourHist
+        SORequestHist
         SOLabourHistCSV
         VehicleInventory
         Vehicles
@@ -103,14 +103,14 @@
         End Set
     End Property
 
-    Public Property SOLabourHist() As String
+    Public Property SORequestHist() As String
         Get
-            Return _solabourhist
+            Return _soRequestHist
         End Get
         Set(ByVal value As String)
-            If _solabourhist <> value Then
-                _solabourhist = value
-                OnPropertyChanged(NameOf(SOLabourHist))
+            If _soRequestHist <> value Then
+                _soRequestHist = value
+                OnPropertyChanged(NameOf(SORequestHist))
             End If
         End Set
     End Property
@@ -245,8 +245,8 @@
                 Return "PartsInvoice.CSV"
             Case DataFile.SOHeaderHist
                 Return "SOHeaderHist.TXT"
-            Case DataFile.SOLabourHist
-                Return "SOLabourHist.TXT"
+            Case DataFile.SORequestHist
+                Return "SORequestHist.TXT"
             Case DataFile.VehicleInventory
                 Return "VehicleInventory.TXT"
             Case DataFile.Vehicles

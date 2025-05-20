@@ -44,9 +44,9 @@
         <Label Margin="5 5 5 5" Content="Select SOHeaderHist" Grid.Row="5" Grid.Column="0"/>
         <TextBox Margin="5 5 5 5" Grid.Row="5" Grid.Column="1" Text="{Binding SOHeaderHist , UpdateSourceTrigger=PropertyChanged}" />
         <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="5" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SOHeaderHist"/>
-        <Label Margin="5 5 5 5" Content="Select SOLabourHist" Grid.Row="6" Grid.Column="0"/>
-        <TextBox Margin="5 5 5 5" Grid.Row="6" Grid.Column="1" Text="{Binding SOLabourHist , UpdateSourceTrigger=PropertyChanged}" />
-        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="6" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SOLabourHist"/>
+        <Label Margin="5 5 5 5" Content="Select SORequestHist" Grid.Row="6" Grid.Column="0"/>
+        <TextBox Margin="5 5 5 5" Grid.Row="6" Grid.Column="1" Text="{Binding SORequestHist , UpdateSourceTrigger=PropertyChanged}" />
+        <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="6" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SORequestHist"/>
         <Label Margin="5 5 5 5" Content="Select SOLabourHistCSV" Grid.Row="7" Grid.Column="0"/>
         <TextBox Margin="5 5 5 5" Grid.Row="7" Grid.Column="1" Text="{Binding SOLabourHistCSV , UpdateSourceTrigger=PropertyChanged}" />
         <Button Margin="5 5 5 5" Content="Browse File" Grid.Row="7" Grid.Column="2" Command="{Binding SetFieldCommand}"  CommandParameter="SOLabourHistCSV"/>
