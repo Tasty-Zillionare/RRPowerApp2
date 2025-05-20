@@ -161,6 +161,21 @@ Public Class RunCommand
                  , {"BODYTYPE||", "Body"} _
                   , {"LASTDRIVER#||", "OriginalOwner"}}
 
+    Dim SOLabourHistCSV As New Dictionary(Of String, String) From {
+        {"RO#", "SONumber"},
+        {"Technician", "Tech"},
+        {"Line", "RequestLine"},
+        {"InvoicePrefix", "PayType"},
+        {"Operation", "OpCode"},
+        {"Hours", "ActualHours"},
+        {"Rate", "LabourPrice"},
+        {"Amount", "LabourTotal"},
+        {"Cost", "LabourCost"},
+        {"Advisor", "CSR"},
+        {"SequenceLine", "SequenceLine"}
+        }
+
+
 
 
 
